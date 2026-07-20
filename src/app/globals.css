@@ -1,0 +1,73 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
+  --font-body: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+
+  --color-ink: #071a2c;
+  --color-navy: #0f3457;
+  --color-navy-light: #1c4e7a;
+  --color-teal: #0e8c82;
+  --color-teal-bright: #2dd4bf;
+  --color-coral: #e8544a;
+  --color-amber: #dd9c07;
+  --color-paper: #f5f8f9;
+  --color-surface: #ffffff;
+  --color-mist: #eaf1f3;
+  --color-line: #dbe6ea;
+  --color-slate: #5e7787;
+  --color-slate-dark: #33495a;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-slate-dark);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, .font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
+}
+
+.font-mono-data {
+  font-family: var(--font-mono);
+}
+
+::selection {
+  background: var(--color-teal-bright);
+  color: var(--color-ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-teal-bright);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Scrollbar for a slightly more crafted feel in dense tables */
+.styled-scroll::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+.styled-scroll::-webkit-scrollbar-track {
+  background: var(--color-mist);
+}
+.styled-scroll::-webkit-scrollbar-thumb {
+  background: var(--color-line);
+  border-radius: 8px;
+}
