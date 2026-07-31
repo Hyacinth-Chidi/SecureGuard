@@ -41,7 +41,7 @@ export default function CampaignsPage() {
         action={
           <Link
             href="/dashboard/admin/campaigns/new"
-            className="inline-flex items-center gap-1.5 bg-navy text-white text-sm font-medium px-4 py-2.5 rounded-lg hover:bg-navy-light transition-colors"
+            className="inline-flex items-center gap-1.5 bg-primary text-white text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-primary-glow shadow-md shadow-primary-glow/20 transition-all duration-200"
           >
             <Send size={15} />
             New campaign
@@ -60,7 +60,7 @@ export default function CampaignsPage() {
               action={
                 <Link
                   href="/dashboard/admin/campaigns/new"
-                  className="inline-flex items-center gap-1.5 bg-navy text-white text-sm font-medium px-4 py-2.5 rounded-lg hover:bg-navy-light transition-colors"
+                  className="inline-flex items-center gap-1.5 bg-primary text-white text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-primary-glow shadow-md shadow-primary-glow/20 transition-all duration-200"
                 >
                   <Fish size={15} />
                   Create a campaign
@@ -71,7 +71,7 @@ export default function CampaignsPage() {
         ) : (
           <Card className="overflow-hidden">
             <table className="w-full text-sm">
-              <thead className="bg-mist/60 text-left text-xs uppercase tracking-wide text-slate">
+              <thead className="bg-surface-hover text-left text-xs uppercase tracking-wide text-text-muted">
                 <tr>
                   <th className="px-5 py-3 font-medium">Campaign</th>
                   <th className="px-5 py-3 font-medium">Template</th>
@@ -82,26 +82,26 @@ export default function CampaignsPage() {
                   <th className="px-5 py-3 font-medium">Created</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-line">
+              <tbody className="divide-y divide-border">
                 {campaigns.map((c) => (
-                  <tr key={c._id} className="hover:bg-mist/40 cursor-pointer transition-colors">
+                  <tr key={c._id} className="hover:bg-surface-hover/50 cursor-pointer transition-colors">
                     <td className="px-5 py-3.5">
-                      <Link href={`/dashboard/admin/campaigns/${c._id}`} className="font-medium text-slate-dark hover:text-teal">
+                      <Link href={`/dashboard/admin/campaigns/${c._id}`} className="font-semibold text-white hover:text-primary-glow">
                         {c.name}
                       </Link>
                     </td>
-                    <td className="px-5 py-3.5 text-slate">{c.templateId?.name ?? "—"}</td>
+                    <td className="px-5 py-3.5 text-text-muted">{c.templateId?.name ?? "—"}</td>
                     <td className="px-5 py-3.5">
                       <Badge tone={statusTone[c.status] ?? "neutral"}>{c.status}</Badge>
                     </td>
-                    <td className="px-5 py-3.5 text-slate-dark font-mono-data">{c.stats.total}</td>
-                    <td className="px-5 py-3.5 text-slate-dark font-mono-data">
+                    <td className="px-5 py-3.5 text-white font-mono-data">{c.stats.total}</td>
+                    <td className="px-5 py-3.5 text-white font-mono-data">
                       {c.stats.total > 0 ? Math.round((c.stats.clicked / c.stats.total) * 100) : 0}%
                     </td>
-                    <td className="px-5 py-3.5 text-slate-dark font-mono-data">
+                    <td className="px-5 py-3.5 text-white font-mono-data">
                       {c.stats.total > 0 ? Math.round((c.stats.reported / c.stats.total) * 100) : 0}%
                     </td>
-                    <td className="px-5 py-3.5 text-slate">{formatDate(c.createdAt)}</td>
+                    <td className="px-5 py-3.5 text-text-muted">{formatDate(c.createdAt)}</td>
                   </tr>
                 ))}
               </tbody>

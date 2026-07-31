@@ -8,6 +8,8 @@ export interface IQuizQuestion {
 
 export interface ITrainingModule {
   _id: mongoose.Types.ObjectId;
+  organizationId?: mongoose.Types.ObjectId;
+  isSystem: boolean;
   title: string;
   summary: string;
   content: string;
@@ -31,6 +33,8 @@ const QuizQuestionSchema = new Schema<IQuizQuestion>(
 
 const TrainingModuleSchema = new Schema<ITrainingModule>(
   {
+    organizationId: { type: Schema.Types.ObjectId, ref: "Organization", index: true },
+    isSystem: { type: Boolean, default: false, index: true },
     title: { type: String, required: true, trim: true },
     summary: { type: String, default: "" },
     content: { type: String, required: true },

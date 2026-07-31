@@ -6,22 +6,32 @@ import User from "@/lib/models/User";
 import TrainingModule from "@/lib/models/TrainingModule";
 import TrainingProgress from "@/lib/models/TrainingProgress";
 import { requireAdmin } from "@/lib/apiAuth";
+import Template from "@/lib/models/Template";
+import { buildTenantScopedQuery } from "@/lib/organizationScope";
 import { computeRiskScore } from "@/lib/utils";
 
 export async function GET() {
-  const { error } = await requireAdmin();
+  const { error, session } = await requireAdmin();
   if (error) return error;
 
   await connectDB();
+  const organizationId = session!.user.organizationId;
+  const [adminDocs, employeeDocs] = await Promise.all([
+    User.find({ organizationId, role: "org_admin" }, "_id").lean(),
+    User.find({ organizationId, role: "employee" }, "_id name email department").lean(),
+  ]);
+  const adminIds = adminDocs.map((admin) => admin._id);
+  const employeeIds = employeeDocs.map((employee) => employee._id);
 
   const [totalCampaigns, totalEmployees, totalTemplates, totalModules] = await Promise.all([
-    Campaign.countDocuments(),
-    User.countDocuments({ role: "employee" }),
-    (await import("@/lib/models/Template")).default.countDocuments(),
-    TrainingModule.countDocuments(),
+    Campaign.countDocuments(buildTenantScopedQuery({}, organizationId, { createdBy: { $in: adminIds } })),
+    User.countDocuments({ organizationId, role: "employee" }),
+    Template.countDocuments(buildTenantScopedQuery({}, organizationId, { createdBy: { $in: adminIds } })),
+    TrainingModule.countDocuments(buildTenantScopedQuery({}, organizationId, { createdBy: { $in: adminIds } })),
   ]);
 
   const overallStats = await CampaignTarget.aggregate([
+    { $match: { userId: { $in: employeeIds } } },
     {
       $group: {
         _id: null,
@@ -37,7 +47,13 @@ export async function GET() {
   const stats = overallStats[0] ?? { total: 0, sent: 0, opened: 0, clicked: 0, submitted: 0, reported: 0 };
 
   // Click-rate trend by campaign, in chronological order
-  const campaigns = await Campaign.find({ status: { $in: ["running", "completed"] } })
+  const campaigns = await Campaign.find(
+    buildTenantScopedQuery(
+      { status: { $in: ["running", "completed"] } },
+      organizationId,
+      { status: { $in: ["running", "completed"] }, createdBy: { $in: adminIds } }
+    )
+  )
     .sort({ createdAt: 1 })
     .lean();
   const campaignIds = campaigns.map((c) => c._id);
@@ -63,9 +79,9 @@ export async function GET() {
   });
 
   // Department risk breakdown
-  const employees = await User.find({ role: "employee" }, "_id department").lean();
-  const deptByUser = new Map(employees.map((e) => [e._id.toString(), e.department]));
+  const deptByUser = new Map(employeeDocs.map((e) => [e._id.toString(), e.department]));
   const targetsByUser = await CampaignTarget.aggregate([
+    { $match: { userId: { $in: employeeIds } } },
     {
       $group: {
         _id: "$userId",
@@ -95,7 +111,6 @@ export async function GET() {
   }));
 
   // Leaderboard: safest employees (lowest risk, at least 1 campaign) and highest risk
-  const employeeDocs = await User.find({ role: "employee" }, "name email department").lean();
   const nameByUser = new Map(employeeDocs.map((e) => [e._id.toString(), e]));
   const scored = targetsByUser
     .filter((t) => t.totalCampaigns > 0)
@@ -113,7 +128,7 @@ export async function GET() {
   const riskiest = [...scored].sort((a, b) => b.score - a.score).slice(0, 5);
   const safest = [...scored].sort((a, b) => a.score - b.score).slice(0, 5);
 
-  const trainingCompletion = await TrainingProgress.countDocuments({ status: "completed" });
+  const trainingCompletion = await TrainingProgress.countDocuments({ status: "completed", userId: { $in: employeeIds } });
 
   return NextResponse.json({
     totals: { totalCampaigns, totalEmployees, totalTemplates, totalModules },

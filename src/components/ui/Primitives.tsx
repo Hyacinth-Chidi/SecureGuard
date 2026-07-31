@@ -4,7 +4,7 @@ import { HTMLAttributes, ReactNode } from "react";
 export function Card({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn("bg-surface border border-line rounded-xl shadow-[0_1px_2px_rgba(15,52,87,0.04)]", className)}
+      className={cn("glass-panel rounded-2xl shadow-lg shadow-black/20", className)}
       {...props}
     />
   );
@@ -13,20 +13,21 @@ export function Card({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
 type BadgeTone = "low" | "medium" | "high" | "neutral" | "info" | "success";
 
 const badgeTones: Record<BadgeTone, string> = {
-  low: "bg-teal/10 text-teal border-teal/20",
-  medium: "bg-amber/10 text-amber border-amber/20",
-  high: "bg-coral/10 text-coral border-coral/20",
-  neutral: "bg-mist text-slate border-line",
-  info: "bg-navy/10 text-navy border-navy/20",
-  success: "bg-teal-bright/10 text-teal border-teal-bright/30",
+  low: "bg-primary/10 text-primary border-primary/20",
+  medium: "bg-warning/10 text-warning border-warning/20",
+  high: "bg-danger/10 text-danger border-danger/20",
+  neutral: "bg-surface-hover text-text-muted border-border",
+  info: "bg-primary/10 text-primary-glow border-primary/30",
+  success: "bg-accent/10 text-accent border-accent/30",
 };
 
-export function Badge({ tone = "neutral", children }: { tone?: BadgeTone; children: ReactNode }) {
+export function Badge({ tone = "neutral", children, className }: { tone?: BadgeTone; children: ReactNode; className?: string }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 text-xs font-medium px-2.5 py-1 rounded-full border",
-        badgeTones[tone]
+        "inline-flex items-center gap-1 text-sm font-medium px-3 py-1 rounded-full border",
+        badgeTones[tone],
+        className
       )}
     >
       {children}
@@ -39,30 +40,30 @@ export function StatCard({
   value,
   sublabel,
   icon,
-  tone = "navy",
+  tone = "primary",
 }: {
   label: string;
   value: string | number;
   sublabel?: string;
   icon?: ReactNode;
-  tone?: "navy" | "teal" | "coral" | "amber";
+  tone?: "primary" | "accent" | "danger" | "warning";
 }) {
   const toneColor = {
-    navy: "text-navy bg-navy/10",
-    teal: "text-teal bg-teal/10",
-    coral: "text-coral bg-coral/10",
-    amber: "text-amber bg-amber/10",
+    primary: "text-primary bg-primary/10 border border-primary/20",
+    accent: "text-accent bg-accent/10 border border-accent/20",
+    danger: "text-danger bg-danger/10 border border-danger/20",
+    warning: "text-warning bg-warning/10 border border-warning/20",
   }[tone];
 
   return (
-    <Card className="p-5">
+    <Card className="p-6 transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-black/40">
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-slate">{label}</p>
-          <p className="font-display text-3xl font-semibold text-slate-dark mt-2">{value}</p>
-          {sublabel && <p className="text-xs text-slate mt-1">{sublabel}</p>}
+          <p className="text-sm font-medium uppercase tracking-wider text-text-muted">{label}</p>
+          <p className="font-display text-4xl font-bold text-text-main mt-2">{value}</p>
+          {sublabel && <p className="text-sm text-text-muted mt-2">{sublabel}</p>}
         </div>
-        {icon && <div className={cn("p-2.5 rounded-lg", toneColor)}>{icon}</div>}
+        {icon && <div className={cn("p-3 rounded-xl shadow-inner", toneColor)}>{icon}</div>}
       </div>
     </Card>
   );

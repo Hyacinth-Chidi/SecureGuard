@@ -17,6 +17,7 @@ interface ModuleRow {
   completions: number;
   avgScore: number;
   totalEmployees: number;
+  isSystem?: boolean;
 }
 
 export default function TrainingListPage() {
@@ -44,7 +45,7 @@ export default function TrainingListPage() {
         action={
           <Link
             href="/dashboard/admin/training/new"
-            className="inline-flex items-center gap-1.5 bg-navy text-white text-sm font-medium px-4 py-2.5 rounded-lg hover:bg-navy-light transition-colors"
+            className="inline-flex items-center gap-1.5 bg-primary text-white text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-primary-glow shadow-md shadow-primary-glow/20 transition-all duration-200"
           >
             <Plus size={15} />
             New module
@@ -64,22 +65,27 @@ export default function TrainingListPage() {
             {modules.map((m) => (
               <Card key={m._id} className="p-5 flex flex-col">
                 <div className="flex items-start justify-between gap-2">
-                  <Badge tone={m.published ? "success" : "neutral"}>{m.published ? "Published" : "Draft"}</Badge>
-                  <button
-                    onClick={() => handleDelete(m._id)}
-                    className="text-slate hover:text-coral transition-colors"
-                    aria-label="Delete module"
-                  >
-                    <Trash2 size={15} />
-                  </button>
+                  <div className="flex gap-2">
+                    <Badge tone={m.published ? "success" : "neutral"}>{m.published ? "Published" : "Draft"}</Badge>
+                    {m.isSystem && <Badge tone="info">System</Badge>}
+                  </div>
+                  {!m.isSystem && (
+                    <button
+                      onClick={() => handleDelete(m._id)}
+                      className="text-text-muted hover:text-danger transition-colors"
+                      aria-label="Delete module"
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  )}
                 </div>
                 <Link href={`/dashboard/admin/training/${m._id}`} className="mt-3 group">
-                  <h3 className="font-display font-semibold text-slate-dark group-hover:text-teal transition-colors">
+                  <h3 className="font-display font-semibold text-white group-hover:text-primary-glow transition-colors">
                     {m.title}
                   </h3>
-                  <p className="text-sm text-slate mt-1.5 line-clamp-2">{m.summary}</p>
+                  <p className="text-sm font-medium text-text-muted mt-1.5 line-clamp-2">{m.summary}</p>
                 </Link>
-                <div className="flex items-center gap-4 mt-4 pt-4 border-t border-line text-xs text-slate">
+                <div className="flex items-center gap-4 mt-4 pt-4 border-t border-border text-xs font-medium text-text-muted">
                   <span className="flex items-center gap-1">
                     <Clock size={12} />
                     {m.estimatedMinutes} min

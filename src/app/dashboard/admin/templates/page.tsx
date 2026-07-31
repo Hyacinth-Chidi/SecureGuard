@@ -13,6 +13,7 @@ interface TemplateRow {
   category: string;
   difficulty: "easy" | "medium" | "hard";
   subject: string;
+  isSystem?: boolean;
 }
 
 const difficultyTone = { easy: "low", medium: "medium", hard: "high" } as const;
@@ -42,7 +43,7 @@ export default function TemplatesPage() {
         action={
           <Link
             href="/dashboard/admin/templates/new"
-            className="inline-flex items-center gap-1.5 bg-navy text-white text-sm font-medium px-4 py-2.5 rounded-lg hover:bg-navy-light transition-colors"
+            className="inline-flex items-center gap-1.5 bg-primary text-white text-sm font-semibold px-4 py-2.5 rounded-xl hover:bg-primary-glow shadow-md shadow-primary-glow/20 transition-all duration-200"
           >
             <Plus size={15} />
             New template
@@ -62,21 +63,26 @@ export default function TemplatesPage() {
             {templates.map((t) => (
               <Card key={t._id} className="p-5 flex flex-col">
                 <div className="flex items-start justify-between gap-2">
-                  <Badge tone={difficultyTone[t.difficulty]}>{t.difficulty}</Badge>
-                  <button
-                    onClick={() => handleDelete(t._id)}
-                    className="text-slate hover:text-coral transition-colors"
-                    aria-label="Delete template"
-                  >
-                    <Trash2 size={15} />
-                  </button>
+                  <div className="flex gap-2">
+                    <Badge tone={difficultyTone[t.difficulty]}>{t.difficulty}</Badge>
+                    {t.isSystem && <Badge tone="info">System</Badge>}
+                  </div>
+                  {!t.isSystem && (
+                    <button
+                      onClick={() => handleDelete(t._id)}
+                      className="text-text-muted hover:text-danger transition-colors"
+                      aria-label="Delete template"
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  )}
                 </div>
                 <Link href={`/dashboard/admin/templates/${t._id}`} className="mt-3 group">
-                  <h3 className="font-display font-semibold text-slate-dark group-hover:text-teal transition-colors">
+                  <h3 className="font-display font-semibold text-white group-hover:text-primary-glow transition-colors">
                     {t.name}
                   </h3>
-                  <p className="text-xs text-slate mt-1">{t.category}</p>
-                  <p className="text-sm text-slate-dark mt-3 line-clamp-2">&ldquo;{t.subject}&rdquo;</p>
+                  <p className="text-xs font-medium text-text-muted mt-1">{t.category}</p>
+                  <p className="text-sm font-medium text-text-muted mt-3 line-clamp-2">&ldquo;{t.subject}&rdquo;</p>
                 </Link>
               </Card>
             ))}

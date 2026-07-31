@@ -60,9 +60,9 @@ export default function ReportsPage() {
 
         <div className="grid lg:grid-cols-2 gap-4">
           <Card className="p-6">
-            <h3 className="font-display font-semibold text-slate-dark mb-4">Engagement funnel</h3>
+            <h3 className="font-display font-bold text-white mb-4">Engagement funnel</h3>
             {data.stats.total === 0 ? (
-              <p className="text-sm text-slate py-16 text-center">No campaign data yet.</p>
+              <p className="text-sm text-text-muted py-16 text-center">No campaign data yet.</p>
             ) : (
               <ResponsiveContainer width="100%" height={260}>
                 <PieChart>
@@ -72,23 +72,23 @@ export default function ReportsPage() {
                     ))}
                   </Pie>
                   <Legend verticalAlign="bottom" height={30} iconSize={9} wrapperStyle={{ fontSize: 12 }} />
-                  <Tooltip contentStyle={{ borderRadius: 8, border: "1px solid #dbe6ea", fontSize: 12 }} />
+                  <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid rgba(255,255,255,0.1)", fontSize: 12, backgroundColor: "#050810", color: "#F8FAFC" }} />
                 </PieChart>
               </ResponsiveContainer>
             )}
           </Card>
 
           <Card className="p-6">
-            <h3 className="font-display font-semibold text-slate-dark mb-4">Risk by department</h3>
+            <h3 className="font-display font-bold text-white mb-4">Risk by department</h3>
             {data.departmentRisk.length === 0 ? (
-              <p className="text-sm text-slate py-16 text-center">No campaign data yet.</p>
+              <p className="text-sm text-text-muted py-16 text-center">No campaign data yet.</p>
             ) : (
               <ResponsiveContainer width="100%" height={260}>
                 <BarChart data={data.departmentRisk} layout="vertical" margin={{ left: 12 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#eaf1f3" />
-                  <XAxis type="number" tick={{ fontSize: 11, fill: "#5e7787" }} />
-                  <YAxis type="category" dataKey="department" width={90} tick={{ fontSize: 11, fill: "#5e7787" }} />
-                  <Tooltip contentStyle={{ borderRadius: 8, border: "1px solid #dbe6ea", fontSize: 12 }} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                  <XAxis type="number" tick={{ fontSize: 11, fill: "#89A4B5" }} />
+                  <YAxis type="category" dataKey="department" width={90} tick={{ fontSize: 11, fill: "#89A4B5" }} />
+                  <Tooltip contentStyle={{ borderRadius: 12, border: "1px solid rgba(255,255,255,0.1)", fontSize: 12, backgroundColor: "#050810", color: "#F8FAFC" }} />
                   <Bar dataKey="avgRisk" fill="#0e8c82" radius={[0, 6, 6, 0]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -98,16 +98,16 @@ export default function ReportsPage() {
 
         <div className="grid lg:grid-cols-2 gap-4">
           <Card className="p-6">
-            <h3 className="font-display font-semibold text-slate-dark mb-4">Needs coaching</h3>
+            <h3 className="font-display font-bold text-white mb-4">Needs coaching</h3>
             {data.riskiest.length === 0 ? (
-              <p className="text-sm text-slate py-6 text-center">No data yet.</p>
+              <p className="text-sm text-text-muted py-6 text-center">No data yet.</p>
             ) : (
               <div className="space-y-3">
                 {data.riskiest.map((r, i) => (
                   <div key={i} className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-slate-dark">{r.user?.name}</p>
-                      <p className="text-xs text-slate">{r.user?.department}</p>
+                      <p className="text-sm font-bold text-white">{r.user?.name}</p>
+                      <p className="text-xs font-medium text-text-muted">{r.user?.department}</p>
                     </div>
                     <Badge tone={r.score >= 60 ? "high" : "medium"}>{r.score}</Badge>
                   </div>
@@ -117,16 +117,16 @@ export default function ReportsPage() {
           </Card>
 
           <Card className="p-6">
-            <h3 className="font-display font-semibold text-slate-dark mb-4">Setting the standard</h3>
+            <h3 className="font-display font-bold text-white mb-4">Setting the standard</h3>
             {data.safest.length === 0 ? (
-              <p className="text-sm text-slate py-6 text-center">No data yet.</p>
+              <p className="text-sm text-text-muted py-6 text-center">No data yet.</p>
             ) : (
               <div className="space-y-3">
                 {data.safest.map((r, i) => (
                   <div key={i} className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-slate-dark">{r.user?.name}</p>
-                      <p className="text-xs text-slate">{r.user?.department}</p>
+                      <p className="text-sm font-bold text-white">{r.user?.name}</p>
+                      <p className="text-xs font-medium text-text-muted">{r.user?.department}</p>
                     </div>
                     <Badge tone="low">{r.score}</Badge>
                   </div>

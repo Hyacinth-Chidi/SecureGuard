@@ -3,6 +3,8 @@ import Image from "next/image";
 import { RegisterForm } from "./RegisterForm";
 
 export default function RegisterPage() {
+  const selfRegistrationEnabled = process.env.ENABLE_SELF_REGISTRATION === "true";
+
   return (
     <div className="min-h-screen flex items-center justify-center p-8 bg-paper">
       <div className="w-full max-w-sm">
@@ -11,12 +13,22 @@ export default function RegisterPage() {
           <span className="font-display font-semibold text-xl text-navy">SecureGuard</span>
         </div>
 
-        <h2 className="font-display text-2xl font-semibold text-slate-dark text-center">Create your account</h2>
+        <h2 className="font-display text-2xl font-semibold text-slate-dark text-center">
+          {selfRegistrationEnabled ? "Create your account" : "Registration is disabled"}
+        </h2>
         <p className="text-sm text-slate mt-1.5 mb-7 text-center">
-          Set up your employee login for the awareness portal.
+          {selfRegistrationEnabled
+            ? "Set up your employee login for the awareness portal."
+            : "Ask your organization admin to create or invite your account before signing in."}
         </p>
 
-        <RegisterForm />
+        {selfRegistrationEnabled ? (
+          <RegisterForm />
+        ) : (
+          <div className="rounded-lg border border-line bg-white px-4 py-4 text-sm text-slate">
+            Public self-registration is turned off for safety.
+          </div>
+        )}
 
         <p className="text-xs text-slate mt-6 text-center">
           Already have an account?{" "}

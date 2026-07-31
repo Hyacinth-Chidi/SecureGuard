@@ -2,6 +2,7 @@ import mongoose, { Schema, models, model } from "mongoose";
 
 export interface ICampaignTarget {
   _id: mongoose.Types.ObjectId;
+  organizationId?: mongoose.Types.ObjectId;
   campaignId: mongoose.Types.ObjectId;
   userId: mongoose.Types.ObjectId;
   token: string;
@@ -16,6 +17,7 @@ export interface ICampaignTarget {
 
 const CampaignTargetSchema = new Schema<ICampaignTarget>(
   {
+    organizationId: { type: Schema.Types.ObjectId, ref: "Organization", index: true },
     campaignId: { type: Schema.Types.ObjectId, ref: "Campaign", required: true },
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
     token: { type: String, required: true, unique: true },

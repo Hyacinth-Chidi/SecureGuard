@@ -3,7 +3,9 @@ import { z } from "zod";
 import { connectDB } from "@/lib/db";
 import TrainingModule from "@/lib/models/TrainingModule";
 import TrainingProgress from "@/lib/models/TrainingProgress";
+import User from "@/lib/models/User";
 import { requireUser } from "@/lib/apiAuth";
+import { buildTenantScopedQuery } from "@/lib/organizationScope";
 
 const submitSchema = z.object({
   answers: z.array(z.number().int().min(0)),
@@ -21,8 +23,15 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   }
 
   await connectDB();
-  const module_ = await TrainingModule.findById(id);
+  const organizationId = session!.user.organizationId;
+  const adminIds = await User.find({ organizationId, role: "org_admin" }, "_id");
+  const module_ = await TrainingModule.findOne(
+    buildTenantScopedQuery({ _id: id }, organizationId, { createdBy: { $in: adminIds.map((admin) => admin._id) } })
+  );
   if (!module_) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (session!.user.role === "employee" && !module_.published) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
 
   const { answers } = parsed.data;
   let correct = 0;
@@ -34,6 +43,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   const progress = await TrainingProgress.findOneAndUpdate(
     { userId: session!.user.id, moduleId: id },
     {
+      organizationId,
       status: "completed",
       score,
       completedAt: new Date(),

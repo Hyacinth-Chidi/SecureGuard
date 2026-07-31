@@ -24,6 +24,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ token: 
     template: {
       fromName: template.fromName,
       subject: template.subject,
+      landingType: template.landingType ?? "generic",
       landingHeadline: template.landingHeadline,
       landingBody: template.landingBody,
       redFlags: template.redFlags,

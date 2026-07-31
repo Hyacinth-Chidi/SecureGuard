@@ -5,6 +5,7 @@ import bcrypt from "bcryptjs";
 import User from "./models/User";
 import Template from "./models/Template";
 import TrainingModule from "./models/TrainingModule";
+import { ensureLegacyOrganization } from "./tenant";
 
 async function main() {
   const uri = process.env.MONGODB_URI;
@@ -12,6 +13,7 @@ async function main() {
 
   await mongoose.connect(uri);
   console.log("Connected to MongoDB for seeding...");
+  const organization = await ensureLegacyOrganization();
 
   const adminEmail = (process.env.SEED_ADMIN_EMAIL ?? "admin@secureguard.local").toLowerCase();
   const adminPassword = process.env.SEED_ADMIN_PASSWORD ?? "ChangeMe123!";
@@ -24,12 +26,20 @@ async function main() {
       name: adminName,
       email: adminEmail,
       passwordHash,
-      role: "admin",
+      role: "org_admin",
+      organizationId: organization._id,
       department: "Security",
       jobTitle: "Security Awareness Lead",
     });
     console.log(`Created admin: ${adminEmail} / ${adminPassword}`);
   } else {
+    if (!admin.organizationId) {
+      admin.organizationId = organization._id;
+    }
+    if ((admin.role as string) === "admin") {
+      admin.role = "org_admin";
+    }
+    await admin.save();
     console.log(`Admin already exists: ${adminEmail}`);
   }
 
@@ -46,7 +56,7 @@ async function main() {
     const exists = await User.findOne({ email: emp.email });
     if (!exists) {
       const passwordHash = await bcrypt.hash("Employee123!", 10);
-      await User.create({ ...emp, passwordHash, role: "employee" });
+      await User.create({ ...emp, passwordHash, role: "employee", organizationId: organization._id });
       console.log(`Created employee: ${emp.email} / Employee123!`);
     }
   }
@@ -154,7 +164,7 @@ async function main() {
   for (const t of templates) {
     const exists = await Template.findOne({ name: t.name });
     if (!exists) {
-      await Template.create({ ...t, createdBy: admin._id });
+      await Template.create({ ...t, createdBy: admin._id, organizationId: organization._id });
       console.log(`Created template: ${t.name}`);
     }
   }
@@ -289,7 +299,7 @@ Reporting quickly, even for something that turns out to be harmless, helps your 
   for (const m of modules) {
     const exists = await TrainingModule.findOne({ title: m.title });
     if (!exists) {
-      await TrainingModule.create({ ...m, createdBy: admin._id });
+      await TrainingModule.create({ ...m, createdBy: admin._id, organizationId: organization._id });
       console.log(`Created training module: ${m.title}`);
     }
   }

@@ -4,6 +4,7 @@ export type CampaignStatus = "draft" | "scheduled" | "running" | "completed";
 
 export interface ICampaign {
   _id: mongoose.Types.ObjectId;
+  organizationId?: mongoose.Types.ObjectId;
   name: string;
   description?: string;
   templateId: mongoose.Types.ObjectId;
@@ -20,6 +21,7 @@ export interface ICampaign {
 
 const CampaignSchema = new Schema<ICampaign>(
   {
+    organizationId: { type: Schema.Types.ObjectId, ref: "Organization", index: true },
     name: { type: String, required: true, trim: true },
     description: { type: String },
     templateId: { type: Schema.Types.ObjectId, ref: "Template", required: true },

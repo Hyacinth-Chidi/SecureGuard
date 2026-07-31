@@ -5,19 +5,22 @@
   --font-body: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
 
-  --color-ink: #071a2c;
-  --color-navy: #0f3457;
-  --color-navy-light: #1c4e7a;
-  --color-teal: #0e8c82;
-  --color-teal-bright: #2dd4bf;
-  --color-coral: #e8544a;
-  --color-amber: #dd9c07;
-  --color-paper: #f5f8f9;
-  --color-surface: #ffffff;
-  --color-mist: #eaf1f3;
-  --color-line: #dbe6ea;
-  --color-slate: #5e7787;
-  --color-slate-dark: #33495a;
+  --color-background: #0B1121;
+  --color-surface: #1F2937;
+  --color-surface-hover: #374151;
+  
+  --color-primary: #3B82F6;
+  --color-primary-glow: #60A5FA;
+  
+  --color-accent: #10B981;
+  
+  --color-warning: #F59E0B;
+  --color-danger: #F43F5E;
+  
+  --color-text-main: #F8FAFC;
+  --color-text-muted: #94A3B8;
+  
+  --color-border: #334155;
 }
 
 html {
@@ -25,15 +28,15 @@ html {
 }
 
 body {
-  background: var(--color-paper);
-  color: var(--color-slate-dark);
+  background: var(--color-background);
+  color: var(--color-text-main);
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
 }
 
 h1, h2, h3, h4, .font-display {
   font-family: var(--font-display);
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
 }
 
 .font-mono-data {
@@ -41,14 +44,18 @@ h1, h2, h3, h4, .font-display {
 }
 
 ::selection {
-  background: var(--color-teal-bright);
-  color: var(--color-ink);
+  background: var(--color-primary-glow);
+  color: #000000;
 }
 
-:focus-visible {
-  outline: 2px solid var(--color-teal-bright);
-  outline-offset: 2px;
+/* Global input focus — always blue, never white */
+input:focus, textarea:focus, select:focus,
+input:focus-visible, textarea:focus-visible, select:focus-visible {
+  outline: none;
+  border-color: var(--color-primary) !important;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
 }
+
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
@@ -59,15 +66,23 @@ h1, h2, h3, h4, .font-display {
   }
 }
 
-/* Scrollbar for a slightly more crafted feel in dense tables */
+/* Styled Scrollbar */
 .styled-scroll::-webkit-scrollbar {
   height: 8px;
   width: 8px;
 }
 .styled-scroll::-webkit-scrollbar-track {
-  background: var(--color-mist);
+  background: var(--color-background);
 }
 .styled-scroll::-webkit-scrollbar-thumb {
-  background: var(--color-line);
+  background: var(--color-surface-hover);
   border-radius: 8px;
+}
+
+/* Glassmorphism Utilities */
+@utility glass-panel {
+  background-color: rgba(31, 41, 55, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--color-border);
 }

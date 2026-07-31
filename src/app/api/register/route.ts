@@ -3,6 +3,7 @@ import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { connectDB } from "@/lib/db";
 import User from "@/lib/models/User";
+import { ensureLegacyOrganization } from "@/lib/tenant";
 
 const registerSchema = z.object({
   name: z.string().min(2).max(80),
@@ -13,6 +14,13 @@ const registerSchema = z.object({
 
 export async function POST(req: Request) {
   try {
+    if (process.env.ENABLE_SELF_REGISTRATION !== "true") {
+      return NextResponse.json(
+        { error: "Public self-registration is disabled. Ask your organization admin to create or invite your account." },
+        { status: 403 }
+      );
+    }
+
     const body = await req.json();
     const parsed = registerSchema.safeParse(body);
     if (!parsed.success) {
@@ -21,6 +29,7 @@ export async function POST(req: Request) {
 
     const { name, email, password, department } = parsed.data;
     await connectDB();
+    const organization = await ensureLegacyOrganization();
 
     const existing = await User.findOne({ email: email.toLowerCase() });
     if (existing) {
@@ -32,6 +41,7 @@ export async function POST(req: Request) {
       name,
       email: email.toLowerCase(),
       passwordHash,
+      organizationId: organization._id,
       department,
       role: "employee",
     });

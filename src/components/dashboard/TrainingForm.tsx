@@ -101,41 +101,41 @@ export function TrainingForm({ initial, moduleId }: { initial?: Partial<Training
     <form onSubmit={handleSubmit} className="space-y-6 max-w-3xl">
       <Card className="p-6 grid sm:grid-cols-2 gap-4">
         <div className="sm:col-span-2">
-          <label className="text-sm font-medium text-slate-dark">Title</label>
+          <label className="text-sm font-semibold text-white">Title</label>
           <input
             required
             value={values.title}
             onChange={(e) => update("title", e.target.value)}
-            className="mt-1.5 w-full rounded-lg border border-line px-3.5 py-2.5 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
+            className="mt-2 w-full rounded-xl bg-surface/50 border border-border px-4 py-3 text-sm text-text-main placeholder:text-text-muted/50 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
           />
         </div>
         <div className="sm:col-span-2">
-          <label className="text-sm font-medium text-slate-dark">Summary</label>
+          <label className="text-sm font-semibold text-white">Summary</label>
           <input
             required
             value={values.summary}
             onChange={(e) => update("summary", e.target.value)}
-            className="mt-1.5 w-full rounded-lg border border-line px-3.5 py-2.5 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
+            className="mt-2 w-full rounded-xl bg-surface/50 border border-border px-4 py-3 text-sm text-text-main placeholder:text-text-muted/50 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
           />
         </div>
         <div>
-          <label className="text-sm font-medium text-slate-dark">Category</label>
+          <label className="text-sm font-semibold text-white">Category</label>
           <input
             required
             value={values.category}
             onChange={(e) => update("category", e.target.value)}
-            className="mt-1.5 w-full rounded-lg border border-line px-3.5 py-2.5 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
+            className="mt-2 w-full rounded-xl bg-surface/50 border border-border px-4 py-3 text-sm text-text-main placeholder:text-text-muted/50 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
           />
         </div>
         <div>
-          <label className="text-sm font-medium text-slate-dark">Estimated minutes</label>
+          <label className="text-sm font-semibold text-white">Estimated minutes</label>
           <input
             required
             type="number"
             min={1}
             value={values.estimatedMinutes}
             onChange={(e) => update("estimatedMinutes", Number(e.target.value))}
-            className="mt-1.5 w-full rounded-lg border border-line px-3.5 py-2.5 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
+            className="mt-2 w-full rounded-xl bg-surface/50 border border-border px-4 py-3 text-sm text-text-main placeholder:text-text-muted/50 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
           />
         </div>
         <label className="flex items-center gap-2 sm:col-span-2 text-sm text-slate-dark">
@@ -150,24 +150,24 @@ export function TrainingForm({ initial, moduleId }: { initial?: Partial<Training
       </Card>
 
       <Card className="p-6">
-        <label className="text-sm font-medium text-slate-dark">Lesson content</label>
-        <p className="text-xs text-slate mt-1 mb-2">Plain text or simple paragraphs, shown to employees as the lesson.</p>
+        <label className="text-sm font-semibold text-white">Lesson content</label>
+        <p className="text-xs text-text-muted mt-1 mb-2">Plain text or simple paragraphs, shown to employees as the lesson.</p>
         <textarea
           required
           rows={10}
           value={values.content}
           onChange={(e) => update("content", e.target.value)}
-          className="w-full rounded-lg border border-line px-3.5 py-2.5 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
+          className="w-full rounded-xl bg-surface/50 border border-border px-4 py-3 text-sm text-text-main placeholder:text-text-muted/50 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
         />
       </Card>
 
       <Card className="p-6">
         <div className="flex items-center justify-between mb-4">
-          <label className="text-sm font-medium text-slate-dark">Quiz questions</label>
+          <label className="text-sm font-semibold text-white">Quiz questions</label>
           <button
             type="button"
             onClick={addQuestion}
-            className="inline-flex items-center gap-1 text-xs font-medium text-teal hover:underline"
+            className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
           >
             <Plus size={13} />
             Add question
@@ -178,16 +178,16 @@ export function TrainingForm({ initial, moduleId }: { initial?: Partial<Training
 
         <div className="space-y-5">
           {values.quiz.map((q, qi) => (
-            <div key={qi} className="border border-line rounded-lg p-4">
+            <div key={qi} className="border border-border rounded-lg p-4">
               <div className="flex items-start gap-2">
                 <input
                   required
                   value={q.question}
                   onChange={(e) => updateQuestion(qi, { question: e.target.value })}
                   placeholder={`Question ${qi + 1}`}
-                  className="flex-1 rounded-lg border border-line px-3.5 py-2 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
+                  className="flex-1 rounded-xl bg-surface/50 border border-border px-4 py-3 text-sm text-text-main placeholder:text-text-muted/50 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                 />
-                <button type="button" onClick={() => removeQuestion(qi)} className="text-slate hover:text-coral mt-2">
+                <button type="button" onClick={() => removeQuestion(qi)} className="text-text-muted hover:text-danger mt-2">
                   <Trash2 size={15} />
                 </button>
               </div>
@@ -205,14 +205,14 @@ export function TrainingForm({ initial, moduleId }: { initial?: Partial<Training
                       value={opt}
                       onChange={(e) => updateOption(qi, oi, e.target.value)}
                       placeholder={`Option ${oi + 1}`}
-                      className="flex-1 rounded-lg border border-line px-3 py-1.5 text-sm outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
+                      className="flex-1 rounded-xl bg-surface/50 border border-border px-3 py-1.5 text-sm text-text-main placeholder:text-text-muted/50 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                     />
                   </label>
                 ))}
                 <button
                   type="button"
                   onClick={() => addOption(qi)}
-                  className="text-xs font-medium text-teal hover:underline ml-6"
+                  className="text-xs font-medium text-primary hover:underline ml-6"
                 >
                   + Add option
                 </button>

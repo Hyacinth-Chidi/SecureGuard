@@ -7,34 +7,39 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "seed": "tsx src/lib/seed.ts"
+    "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test src/lib/__tests__/invites.test.ts src/lib/__tests__/organizationScope.test.ts src/lib/__tests__/tenant.test.ts",
+    "seed": "tsx src/lib/seed.ts",
+    "seed:library": "tsx src/lib/seed-library.ts",
+    "backfill:orgs": "tsx scripts/backfill-organization-ids.ts"
   },
   "dependencies": {
-    "next": "16.2.10",
-    "react": "19.2.7",
-    "react-dom": "19.2.7",
-    "next-auth": "5.0.0-beta.31",
+    "bcryptjs": "3.0.3",
+    "date-fns": "4.4.0",
+    "lucide-react": "1.25.0",
     "mongodb": "7.5.0",
     "mongoose": "9.7.4",
-    "bcryptjs": "3.0.3",
-    "zod": "4.4.3",
+    "next": "^16.2.12",
+    "next-auth": "^5.0.0-beta.32",
+    "nodemailer": "^9.0.3",
+    "react": "19.2.7",
+    "react-dom": "19.2.7",
     "recharts": "3.9.2",
-    "lucide-react": "1.25.0",
-    "date-fns": "4.4.0",
-    "nodemailer": "7.0.13"
+    "zod": "4.4.3"
   },
   "devDependencies": {
-    "typescript": "5.9.3",
+    "@eslint/eslintrc": "^0.1.0",
+    "@tailwindcss/postcss": "4.3.3",
     "@types/node": "24.10.1",
+    "@types/nodemailer": "7.0.4",
     "@types/react": "19.2.17",
     "@types/react-dom": "19.2.3",
-    "@types/nodemailer": "7.0.4",
-    "tailwindcss": "4.3.3",
-    "@tailwindcss/postcss": "4.3.3",
-    "tsx": "4.23.1",
     "dotenv": "17.4.2",
-    "eslint": "9.39.0",
-    "@eslint/eslintrc": "3.3.6",
-    "eslint-config-next": "16.2.10"
+    "eslint": "^10.8.0",
+    "eslint-config-next": "^0.2.4",
+    "postcss": "^8.5.25",
+    "tailwindcss": "4.3.3",
+    "tsx": "4.23.1",
+    "typescript": "5.9.3"
   }
 }

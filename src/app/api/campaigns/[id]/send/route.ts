@@ -6,21 +6,52 @@ import Template from "@/lib/models/Template";
 import { requireAdmin } from "@/lib/apiAuth";
 import { sendCampaignEmail } from "@/lib/mailer";
 import { renderCampaignEmail } from "@/lib/email";
+import User from "@/lib/models/User";
+import { buildTenantScopedQuery } from "@/lib/organizationScope";
 
 export async function POST(_req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { error } = await requireAdmin();
+  const { error, session } = await requireAdmin();
   if (error) return error;
 
   const { id } = await params;
   await connectDB();
+  const organizationId = session!.user.organizationId;
 
-  const campaign = await Campaign.findById(id);
-  if (!campaign) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  const adminIds = await User.find({ organizationId, role: "org_admin" }, "_id");
+  const scopedCampaignQuery = buildTenantScopedQuery(
+    { _id: id },
+    organizationId,
+    { createdBy: { $in: adminIds.map((admin) => admin._id) } }
+  );
+  const existingCampaign = await Campaign.findOne(scopedCampaignQuery);
+  if (!existingCampaign) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (!["draft", "scheduled"].includes(existingCampaign.status)) {
+    return NextResponse.json({ error: "This campaign has already been sent or is no longer sendable." }, { status: 409 });
+  }
 
-  const template = await Template.findById(campaign.templateId);
+  const campaign = await Campaign.findOneAndUpdate(
+    {
+      ...scopedCampaignQuery,
+      status: { $in: ["draft", "scheduled"] },
+    },
+    { $set: { status: "running", sentAt: new Date() } },
+    { new: true }
+  );
+  if (!campaign) {
+    return NextResponse.json({ error: "This campaign is already being sent by another request." }, { status: 409 });
+  }
+
+  const template = await Template.findOne(
+    buildTenantScopedQuery({ _id: campaign.templateId }, organizationId, { createdBy: { $in: adminIds.map((admin) => admin._id) } })
+  );
   if (!template) return NextResponse.json({ error: "Template not found" }, { status: 404 });
 
-  const targets = await CampaignTarget.find({ campaignId: id }).populate("userId", "name email");
+  const targets = await CampaignTarget.find(
+    buildTenantScopedQuery({ campaignId: id, emailSentAt: null }, organizationId, { campaignId: id, emailSentAt: null })
+  ).populate("userId", "name email");
+  if (targets.length === 0) {
+    return NextResponse.json({ error: "This campaign has already been sent." }, { status: 409 });
+  }
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
   let simulatedCount = 0;
@@ -29,6 +60,10 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
   for (const target of targets) {
     const user = target.userId as unknown as { name: string; email: string };
     if (!user?.email) continue;
+
+    if (!target.organizationId && campaign.organizationId) {
+      target.organizationId = campaign.organizationId;
+    }
 
     const html = renderCampaignEmail({
       html: template.htmlBody,
@@ -51,10 +86,6 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
     target.emailSentAt = new Date();
     await target.save();
   }
-
-  campaign.status = "running";
-  campaign.sentAt = new Date();
-  await campaign.save();
 
   return NextResponse.json({
     success: true,
