@@ -18,7 +18,7 @@ export default function EditTrainingPage({ params }: { params: Promise<{ id: str
   return (
     <div>
       <PageHeader title="Edit training module" />
-      <div className="p-8">{module_ ? <TrainingForm initial={module_} moduleId={id} /> : <LoadingBlock />}</div>
+      <div className="p-4 md:p-8">{module_ ? <TrainingForm initial={module_} moduleId={id} /> : <LoadingBlock />}</div>
     </div>
   );
 }

@@ -5,8 +5,6 @@ export type LandingType = "generic" | "microsoft" | "portal" | "hr" | "invoice" 
 
 export interface ITemplate {
   _id: mongoose.Types.ObjectId;
-  organizationId?: mongoose.Types.ObjectId;
-  isSystem: boolean;
   name: string;
   category: string;
   difficulty: TemplateDifficulty;
@@ -25,8 +23,6 @@ export interface ITemplate {
 
 const TemplateSchema = new Schema<ITemplate>(
   {
-    organizationId: { type: Schema.Types.ObjectId, ref: "Organization", index: true },
-    isSystem: { type: Boolean, default: false, index: true },
     name: { type: String, required: true, trim: true },
     category: { type: String, default: "General" },
     difficulty: { type: String, enum: ["easy", "medium", "hard"], default: "medium" },

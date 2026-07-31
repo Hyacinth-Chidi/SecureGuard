@@ -5,7 +5,6 @@ import TrainingModule from "@/lib/models/TrainingModule";
 import TrainingProgress from "@/lib/models/TrainingProgress";
 import { requireAdmin, requireUser } from "@/lib/apiAuth";
 import User from "@/lib/models/User";
-import { buildTenantScopedQuery } from "@/lib/organizationScope";
 
 const quizQuestionSchema = z.object({
   question: z.string().min(1),
@@ -29,23 +28,16 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
 
   const { id } = await params;
   await connectDB();
-  const organizationId = session!.user.organizationId;
-  const adminIds = await User.find({ organizationId, role: "org_admin" }, "_id");
+  const adminIds = await User.find({ role: "admin" }, "_id");
 
-  const module_ = await TrainingModule.findOne(
-    buildTenantScopedQuery({ _id: id }, organizationId, { createdBy: { $in: adminIds.map((admin) => admin._id) } })
-  ).lean();
+  const module_ = await TrainingModule.findOne({ _id: id, createdBy: { $in: adminIds.map((admin) => admin._id) } }).lean();
   if (!module_) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  if (session!.user.role === "org_admin") {
-    const adminScopedModule = await TrainingModule.findOne(
-      buildTenantScopedQuery({ _id: id }, organizationId, { createdBy: { $in: adminIds.map((admin) => admin._id) } })
-    ).lean();
-    if (!adminScopedModule) return NextResponse.json({ error: "Not found" }, { status: 404 });
-    return NextResponse.json({ module: adminScopedModule });
+  if (session!.user.role === "admin") {
+    return NextResponse.json({ module: module_ });
   }
 
-  if (session!.user.role !== "employee") {
+  if (session!.user.role !== "student") {
     return NextResponse.json({ module: module_ });
   }
 
@@ -53,27 +45,44 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
+  // Prerequisite check for students
+  if (module_.prerequisiteModuleId) {
+    const prereqProgress = await TrainingProgress.findOne({
+      userId: session!.user.id,
+      moduleId: module_.prerequisiteModuleId,
+      status: "completed",
+    });
+    if (!prereqProgress) {
+      const prereqModule = await TrainingModule.findById(module_.prerequisiteModuleId, "title");
+      return NextResponse.json({
+        module: module_,
+        locked: true,
+        prerequisite: prereqModule ? { _id: prereqModule._id, title: prereqModule.title } : null,
+      });
+    }
+  }
+
   let progress = await TrainingProgress.findOne({ userId: session!.user.id, moduleId: id });
   if (!progress) {
     progress = await TrainingProgress.create({
-      organizationId,
       userId: session!.user.id,
       moduleId: id,
       status: "in_progress",
     });
   } else if (progress.status === "not_started") {
-    if (!progress.organizationId && organizationId) {
-      progress.organizationId = organizationId;
-    }
     progress.status = "in_progress";
     await progress.save();
   }
 
-  return NextResponse.json({ module: module_, progress });
+  return NextResponse.json({
+    module: module_,
+    progress,
+    user: { name: session!.user.name, email: session!.user.email },
+  });
 }
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { error, session } = await requireAdmin();
+  const { error } = await requireAdmin();
   if (error) return error;
 
   const { id } = await params;
@@ -84,12 +93,9 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   }
 
   await connectDB();
-  const organizationId = session!.user.organizationId;
-  const adminIds = await User.find({ organizationId, role: "org_admin" }, "_id");
+  const adminIds = await User.find({ role: "admin" }, "_id");
   
-  const existing = await TrainingModule.findOne(
-    buildTenantScopedQuery({ _id: id }, organizationId, { createdBy: { $in: adminIds.map((admin) => admin._id) } })
-  );
+  const existing = await TrainingModule.findOne({ _id: id, createdBy: { $in: adminIds.map((admin) => admin._id) } });
   if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
   if (existing.isSystem) {
     return NextResponse.json({ error: "System training modules cannot be modified" }, { status: 403 });
@@ -100,17 +106,14 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 }
 
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { error, session } = await requireAdmin();
+  const { error } = await requireAdmin();
   if (error) return error;
 
   const { id } = await params;
   await connectDB();
-  const organizationId = session!.user.organizationId;
-  const adminIds = await User.find({ organizationId, role: "org_admin" }, "_id");
+  const adminIds = await User.find({ role: "admin" }, "_id");
   
-  const existing = await TrainingModule.findOne(
-    buildTenantScopedQuery({ _id: id }, organizationId, { createdBy: { $in: adminIds.map((admin) => admin._id) } })
-  );
+  const existing = await TrainingModule.findOne({ _id: id, createdBy: { $in: adminIds.map((admin) => admin._id) } });
   if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
   if (existing.isSystem) {
     return NextResponse.json({ error: "System training modules cannot be deleted" }, { status: 403 });

@@ -1,6 +1,6 @@
 import mongoose, { Schema, models, model } from "mongoose";
 
-export type UserRole = "platform_admin" | "org_admin" | "employee";
+export type UserRole = "admin" | "student";
 
 export interface IUser {
   _id: mongoose.Types.ObjectId;
@@ -8,7 +8,6 @@ export interface IUser {
   email: string;
   passwordHash: string;
   role: UserRole;
-  organizationId?: mongoose.Types.ObjectId;
   department: string;
   jobTitle?: string;
   active: boolean;
@@ -21,8 +20,7 @@ const UserSchema = new Schema<IUser>(
     name: { type: String, required: true, trim: true },
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     passwordHash: { type: String, required: true },
-    role: { type: String, enum: ["platform_admin", "org_admin", "employee"], default: "employee" },
-    organizationId: { type: Schema.Types.ObjectId, ref: "Organization" },
+    role: { type: String, enum: ["admin", "student"], default: "student" },
     department: { type: String, default: "General" },
     jobTitle: { type: String },
     active: { type: Boolean, default: true },

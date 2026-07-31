@@ -5,7 +5,6 @@ import bcrypt from "bcryptjs";
 import User from "./models/User";
 import Template from "./models/Template";
 import TrainingModule from "./models/TrainingModule";
-import { ensureLegacyOrganization } from "./tenant";
 
 async function main() {
   const uri = process.env.MONGODB_URI;
@@ -13,7 +12,6 @@ async function main() {
 
   await mongoose.connect(uri);
   console.log("Connected to MongoDB for seeding...");
-  const organization = await ensureLegacyOrganization();
 
   const adminEmail = (process.env.SEED_ADMIN_EMAIL ?? "admin@secureguard.local").toLowerCase();
   const adminPassword = process.env.SEED_ADMIN_PASSWORD ?? "ChangeMe123!";
@@ -26,24 +24,18 @@ async function main() {
       name: adminName,
       email: adminEmail,
       passwordHash,
-      role: "org_admin",
-      organizationId: organization._id,
+      role: "admin",
       department: "Security",
       jobTitle: "Security Awareness Lead",
     });
     console.log(`Created admin: ${adminEmail} / ${adminPassword}`);
   } else {
-    if (!admin.organizationId) {
-      admin.organizationId = organization._id;
-    }
-    if ((admin.role as string) === "admin") {
-      admin.role = "org_admin";
-    }
+    admin.role = "admin";
     await admin.save();
     console.log(`Admin already exists: ${adminEmail}`);
   }
 
-  const sampleEmployees = [
+  const sampleStudents = [
     { name: "Jamie Chen", email: "jamie.chen@secureguard.local", department: "Finance", jobTitle: "Accounts Payable" },
     { name: "Morgan Diaz", email: "morgan.diaz@secureguard.local", department: "Engineering", jobTitle: "Software Engineer" },
     { name: "Priya Nair", email: "priya.nair@secureguard.local", department: "HR", jobTitle: "HR Generalist" },
@@ -52,12 +44,12 @@ async function main() {
     { name: "Nina Petrov", email: "nina.petrov@secureguard.local", department: "Marketing", jobTitle: "Marketing Manager" },
   ];
 
-  for (const emp of sampleEmployees) {
-    const exists = await User.findOne({ email: emp.email });
+  for (const stu of sampleStudents) {
+    const exists = await User.findOne({ email: stu.email });
     if (!exists) {
-      const passwordHash = await bcrypt.hash("Employee123!", 10);
-      await User.create({ ...emp, passwordHash, role: "employee", organizationId: organization._id });
-      console.log(`Created employee: ${emp.email} / Employee123!`);
+      const passwordHash = await bcrypt.hash("Student123!", 10);
+      await User.create({ ...stu, passwordHash, role: "student" });
+      console.log(`Created student: ${stu.email} / Student123!`);
     }
   }
 
@@ -164,7 +156,7 @@ async function main() {
   for (const t of templates) {
     const exists = await Template.findOne({ name: t.name });
     if (!exists) {
-      await Template.create({ ...t, createdBy: admin._id, organizationId: organization._id });
+      await Template.create({ ...t, createdBy: admin._id });
       console.log(`Created template: ${t.name}`);
     }
   }
@@ -218,6 +210,7 @@ When in doubt, don't click. Verify the request through a separate, known channel
           correctIndex: 2,
         },
       ],
+      simulationTemplateId: await Template.findOne({ name: "Package Delivery Failure" }).then(t => t?._id),
     },
     {
       title: "Password & Credential Hygiene",
@@ -299,14 +292,17 @@ Reporting quickly, even for something that turns out to be harmless, helps your 
   for (const m of modules) {
     const exists = await TrainingModule.findOne({ title: m.title });
     if (!exists) {
-      await TrainingModule.create({ ...m, createdBy: admin._id, organizationId: organization._id });
+      await TrainingModule.create({ ...m, createdBy: admin._id });
       console.log(`Created training module: ${m.title}`);
+    } else if (m.simulationTemplateId) {
+      exists.simulationTemplateId = m.simulationTemplateId;
+      await exists.save();
     }
   }
 
   console.log("\nSeed complete.");
   console.log(`Admin login -> ${adminEmail} / ${adminPassword}`);
-  console.log("Employee login -> any seeded employee email / Employee123!");
+  console.log("Student login -> any seeded student email / Student123!");
 
   await mongoose.disconnect();
 }

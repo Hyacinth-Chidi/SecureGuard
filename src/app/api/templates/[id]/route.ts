@@ -2,10 +2,9 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { connectDB } from "@/lib/db";
 import Template from "@/lib/models/Template";
-import Campaign from "@/lib/models/Campaign";
+import Simulation from "@/lib/models/Simulation";
 import { requireAdmin } from "@/lib/apiAuth";
 import User from "@/lib/models/User";
-import { buildTenantScopedQuery } from "@/lib/organizationScope";
 
 const templateSchema = z.object({
   name: z.string().min(2),
@@ -21,22 +20,19 @@ const templateSchema = z.object({
 });
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { error, session } = await requireAdmin();
+  const { error } = await requireAdmin();
   if (error) return error;
 
   const { id } = await params;
   await connectDB();
-  const organizationId = session!.user.organizationId;
-  const adminIds = await User.find({ organizationId, role: "org_admin" }, "_id");
-  const template = await Template.findOne(
-    buildTenantScopedQuery({ _id: id }, organizationId, { createdBy: { $in: adminIds.map((admin) => admin._id) } })
-  ).lean();
+  const adminIds = await User.find({ role: "admin" }, "_id");
+  const template = await Template.findOne({ _id: id, createdBy: { $in: adminIds.map((admin) => admin._id) } }).lean();
   if (!template) return NextResponse.json({ error: "Not found" }, { status: 404 });
   return NextResponse.json({ template });
 }
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { error, session } = await requireAdmin();
+  const { error } = await requireAdmin();
   if (error) return error;
 
   const { id } = await params;
@@ -47,12 +43,9 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   }
 
   await connectDB();
-  const organizationId = session!.user.organizationId;
-  const adminIds = await User.find({ organizationId, role: "org_admin" }, "_id");
+  const adminIds = await User.find({ role: "admin" }, "_id");
   
-  const existing = await Template.findOne(
-    buildTenantScopedQuery({ _id: id }, organizationId, { createdBy: { $in: adminIds.map((admin) => admin._id) } })
-  );
+  const existing = await Template.findOne({ _id: id, createdBy: { $in: adminIds.map((admin) => admin._id) } });
   if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
   if (existing.isSystem) {
     return NextResponse.json({ error: "System templates cannot be modified" }, { status: 403 });
@@ -63,28 +56,23 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 }
 
 export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { error, session } = await requireAdmin();
+  const { error } = await requireAdmin();
   if (error) return error;
 
   const { id } = await params;
   await connectDB();
-  const organizationId = session!.user.organizationId;
-  const adminIds = await User.find({ organizationId, role: "org_admin" }, "_id");
+  const adminIds = await User.find({ role: "admin" }, "_id");
 
-  const existing = await Template.findOne(
-    buildTenantScopedQuery({ _id: id }, organizationId, { createdBy: { $in: adminIds.map((admin) => admin._id) } })
-  );
+  const existing = await Template.findOne({ _id: id, createdBy: { $in: adminIds.map((admin) => admin._id) } });
   if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
   if (existing.isSystem) {
     return NextResponse.json({ error: "System templates cannot be deleted" }, { status: 403 });
   }
 
-  const inUse = await Campaign.exists(
-    buildTenantScopedQuery({ templateId: id }, organizationId, { createdBy: { $in: adminIds.map((admin) => admin._id) }, templateId: id })
-  );
+  const inUse = await Simulation.exists({ templateId: id, createdBy: { $in: adminIds.map((admin) => admin._id) } });
   if (inUse) {
     return NextResponse.json(
-      { error: "This template is used by an existing campaign and cannot be deleted." },
+      { error: "This template is used by an existing simulation and cannot be deleted." },
       { status: 409 }
     );
   }

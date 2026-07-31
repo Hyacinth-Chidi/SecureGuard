@@ -1,37 +1,35 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
-import Campaign from "@/lib/models/Campaign";
-import CampaignTarget from "@/lib/models/CampaignTarget";
+import Simulation from "@/lib/models/Simulation";
+import SimulationResult from "@/lib/models/SimulationResult";
 import User from "@/lib/models/User";
 import TrainingModule from "@/lib/models/TrainingModule";
 import TrainingProgress from "@/lib/models/TrainingProgress";
 import { requireAdmin } from "@/lib/apiAuth";
 import Template from "@/lib/models/Template";
-import { buildTenantScopedQuery } from "@/lib/organizationScope";
-import { computeRiskScore } from "@/lib/utils";
+import { computeResilienceScore } from "@/lib/utils";
 
 export async function GET() {
-  const { error, session } = await requireAdmin();
+  const { error } = await requireAdmin();
   if (error) return error;
 
   await connectDB();
-  const organizationId = session!.user.organizationId;
-  const [adminDocs, employeeDocs] = await Promise.all([
-    User.find({ organizationId, role: "org_admin" }, "_id").lean(),
-    User.find({ organizationId, role: "employee" }, "_id name email department").lean(),
+  const [adminDocs, studentDocs] = await Promise.all([
+    User.find({ role: "admin" }, "_id").lean(),
+    User.find({ role: "student" }, "_id name email department").lean(),
   ]);
   const adminIds = adminDocs.map((admin) => admin._id);
-  const employeeIds = employeeDocs.map((employee) => employee._id);
+  const studentIds = studentDocs.map((student) => student._id);
 
-  const [totalCampaigns, totalEmployees, totalTemplates, totalModules] = await Promise.all([
-    Campaign.countDocuments(buildTenantScopedQuery({}, organizationId, { createdBy: { $in: adminIds } })),
-    User.countDocuments({ organizationId, role: "employee" }),
-    Template.countDocuments(buildTenantScopedQuery({}, organizationId, { createdBy: { $in: adminIds } })),
-    TrainingModule.countDocuments(buildTenantScopedQuery({}, organizationId, { createdBy: { $in: adminIds } })),
+  const [totalSimulations, totalStudents, totalTemplates, totalModules] = await Promise.all([
+    Simulation.countDocuments({ createdBy: { $in: adminIds } }),
+    User.countDocuments({ role: "student" }),
+    Template.countDocuments({ createdBy: { $in: adminIds } }),
+    TrainingModule.countDocuments({ createdBy: { $in: adminIds } }),
   ]);
 
-  const overallStats = await CampaignTarget.aggregate([
-    { $match: { userId: { $in: employeeIds } } },
+  const overallStats = await SimulationResult.aggregate([
+    { $match: { userId: { $in: studentIds } } },
     {
       $group: {
         _id: null,
@@ -46,46 +44,42 @@ export async function GET() {
   ]);
   const stats = overallStats[0] ?? { total: 0, sent: 0, opened: 0, clicked: 0, submitted: 0, reported: 0 };
 
-  // Click-rate trend by campaign, in chronological order
-  const campaigns = await Campaign.find(
-    buildTenantScopedQuery(
-      { status: { $in: ["running", "completed"] } },
-      organizationId,
-      { status: { $in: ["running", "completed"] }, createdBy: { $in: adminIds } }
-    )
+  // Click-rate trend by simulation, in chronological order
+  const simulations = await Simulation.find(
+    { status: { $in: ["running", "completed"] }, createdBy: { $in: adminIds } }
   )
     .sort({ createdAt: 1 })
     .lean();
-  const campaignIds = campaigns.map((c) => c._id);
-  const perCampaign = await CampaignTarget.aggregate([
-    { $match: { campaignId: { $in: campaignIds } } },
+  const simulationIds = simulations.map((s) => s._id);
+  const perSimulation = await SimulationResult.aggregate([
+    { $match: { simulationId: { $in: simulationIds } } },
     {
       $group: {
-        _id: "$campaignId",
+        _id: "$simulationId",
         total: { $sum: 1 },
         clicked: { $sum: { $cond: [{ $ne: ["$clickedAt", null] }, 1, 0] } },
         reported: { $sum: { $cond: [{ $ne: ["$reportedAt", null] }, 1, 0] } },
       },
     },
   ]);
-  const perCampaignMap = new Map(perCampaign.map((p) => [p._id.toString(), p]));
-  const trend = campaigns.map((c) => {
-    const s = perCampaignMap.get(c._id.toString()) ?? { total: 0, clicked: 0, reported: 0 };
+  const perSimulationMap = new Map(perSimulation.map((p) => [p._id.toString(), p]));
+  const trend = simulations.map((s) => {
+    const p = perSimulationMap.get(s._id.toString()) ?? { total: 0, clicked: 0, reported: 0 };
     return {
-      name: c.name.length > 18 ? c.name.slice(0, 18) + "…" : c.name,
-      clickRate: s.total > 0 ? Math.round((s.clicked / s.total) * 100) : 0,
-      reportRate: s.total > 0 ? Math.round((s.reported / s.total) * 100) : 0,
+      name: s.name.length > 18 ? s.name.slice(0, 18) + "…" : s.name,
+      clickRate: p.total > 0 ? Math.round((p.clicked / p.total) * 100) : 0,
+      reportRate: p.total > 0 ? Math.round((p.reported / p.total) * 100) : 0,
     };
   });
 
-  // Department risk breakdown
-  const deptByUser = new Map(employeeDocs.map((e) => [e._id.toString(), e.department]));
-  const targetsByUser = await CampaignTarget.aggregate([
-    { $match: { userId: { $in: employeeIds } } },
+  // Department resilience breakdown
+  const deptByUser = new Map(studentDocs.map((s) => [s._id.toString(), s.department]));
+  const targetsByUser = await SimulationResult.aggregate([
+    { $match: { userId: { $in: studentIds } } },
     {
       $group: {
         _id: "$userId",
-        totalCampaigns: { $sum: 1 },
+        totalSimulations: { $sum: 1 },
         clicked: { $sum: { $cond: [{ $ne: ["$clickedAt", null] }, 1, 0] } },
         submitted: { $sum: { $cond: [{ $ne: ["$submittedAt", null] }, 1, 0] } },
         reported: { $sum: { $cond: [{ $ne: ["$reportedAt", null] }, 1, 0] } },
@@ -93,11 +87,18 @@ export async function GET() {
     },
   ]);
 
+  const completedCoursesByUser = await TrainingProgress.aggregate([
+    { $match: { status: "completed", userId: { $in: studentIds } } },
+    { $group: { _id: "$userId", completed: { $sum: 1 } } }
+  ]);
+  const completedMap = new Map(completedCoursesByUser.map((c) => [c._id.toString(), c.completed]));
+
   const deptAgg = new Map<string, { scores: number[] }>();
   for (const t of targetsByUser) {
     const dept = deptByUser.get(t._id.toString()) ?? "General";
-    const score = computeRiskScore({
-      totalCampaigns: t.totalCampaigns,
+    const score = computeResilienceScore({
+      completedCourses: completedMap.get(t._id.toString()) || 0,
+      totalSimulations: t.totalSimulations,
       clicked: t.clicked,
       submitted: t.submitted,
       reported: t.reported,
@@ -105,19 +106,20 @@ export async function GET() {
     if (!deptAgg.has(dept)) deptAgg.set(dept, { scores: [] });
     deptAgg.get(dept)!.scores.push(score);
   }
-  const departmentRisk = Array.from(deptAgg.entries()).map(([department, { scores }]) => ({
+  const departmentResilience = Array.from(deptAgg.entries()).map(([department, { scores }]) => ({
     department,
-    avgRisk: Math.round(scores.reduce((a, b) => a + b, 0) / scores.length),
+    avgResilience: Math.round(scores.reduce((a, b) => a + b, 0) / scores.length),
   }));
 
-  // Leaderboard: safest employees (lowest risk, at least 1 campaign) and highest risk
-  const nameByUser = new Map(employeeDocs.map((e) => [e._id.toString(), e]));
+  // Leaderboard: safest students (highest resilience) and riskiest (lowest resilience)
+  const nameByUser = new Map(studentDocs.map((s) => [s._id.toString(), s]));
   const scored = targetsByUser
-    .filter((t) => t.totalCampaigns > 0)
+    .filter((t) => t.totalSimulations > 0)
     .map((t) => ({
       user: nameByUser.get(t._id.toString()),
-      score: computeRiskScore({
-        totalCampaigns: t.totalCampaigns,
+      score: computeResilienceScore({
+        completedCourses: completedMap.get(t._id.toString()) || 0,
+        totalSimulations: t.totalSimulations,
         clicked: t.clicked,
         submitted: t.submitted,
         reported: t.reported,
@@ -125,13 +127,13 @@ export async function GET() {
     }))
     .filter((s) => s.user);
 
-  const riskiest = [...scored].sort((a, b) => b.score - a.score).slice(0, 5);
-  const safest = [...scored].sort((a, b) => a.score - b.score).slice(0, 5);
+  const riskiest = [...scored].sort((a, b) => a.score - b.score).slice(0, 5);
+  const safest = [...scored].sort((a, b) => b.score - a.score).slice(0, 5);
 
-  const trainingCompletion = await TrainingProgress.countDocuments({ status: "completed", userId: { $in: employeeIds } });
+  const trainingCompletion = await TrainingProgress.countDocuments({ status: "completed", userId: { $in: studentIds } });
 
   return NextResponse.json({
-    totals: { totalCampaigns, totalEmployees, totalTemplates, totalModules },
+    totals: { totalSimulations, totalStudents, totalTemplates, totalModules },
     stats: {
       ...stats,
       clickRate: stats.total > 0 ? Math.round((stats.clicked / stats.total) * 100) : 0,
@@ -139,7 +141,7 @@ export async function GET() {
       submitRate: stats.total > 0 ? Math.round((stats.submitted / stats.total) * 100) : 0,
     },
     trend,
-    departmentRisk,
+    departmentResilience,
     riskiest,
     safest,
     trainingCompletion,

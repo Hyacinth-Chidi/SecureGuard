@@ -48,21 +48,21 @@ export default function ReportsPage() {
 
   return (
     <div>
-      <PageHeader title="Reports" description="Deep dive into organizational phishing resilience." />
+      <PageHeader title="Reports" description="Deep dive into platform phishing resilience." />
 
-      <div className="p-8 space-y-6">
+      <div className="p-4 md:p-8 space-y-6">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard label="Emails delivered" value={data.stats.total} icon={<MailOpen size={18} />} tone="navy" />
-          <StatCard label="Click rate" value={`${data.stats.clickRate}%`} icon={<Fish size={18} />} tone="coral" />
-          <StatCard label="Credential submit rate" value={`${data.stats.submitRate}%`} icon={<KeyRound size={18} />} tone="amber" />
-          <StatCard label="Report rate" value={`${data.stats.reportRate}%`} icon={<MessageSquareWarning size={18} />} tone="teal" />
+          <StatCard label="Emails delivered" value={data.stats.total} icon={<MailOpen size={18} />} tone="primary" />
+          <StatCard label="Click rate" value={`${data.stats.clickRate}%`} icon={<Fish size={18} />} tone="danger" />
+          <StatCard label="Credential submit rate" value={`${data.stats.submitRate}%`} icon={<KeyRound size={18} />} tone="warning" />
+          <StatCard label="Report rate" value={`${data.stats.reportRate}%`} icon={<MessageSquareWarning size={18} />} tone="accent" />
         </div>
 
         <div className="grid lg:grid-cols-2 gap-4">
           <Card className="p-6">
             <h3 className="font-display font-bold text-white mb-4">Engagement funnel</h3>
             {data.stats.total === 0 ? (
-              <p className="text-sm text-text-muted py-16 text-center">No campaign data yet.</p>
+              <p className="text-sm text-text-muted py-16 text-center">No simulation data yet.</p>
             ) : (
               <ResponsiveContainer width="100%" height={260}>
                 <PieChart>
@@ -81,7 +81,7 @@ export default function ReportsPage() {
           <Card className="p-6">
             <h3 className="font-display font-bold text-white mb-4">Risk by department</h3>
             {data.departmentRisk.length === 0 ? (
-              <p className="text-sm text-text-muted py-16 text-center">No campaign data yet.</p>
+              <p className="text-sm text-text-muted py-16 text-center">No simulation data yet.</p>
             ) : (
               <ResponsiveContainer width="100%" height={260}>
                 <BarChart data={data.departmentRisk} layout="vertical" margin={{ left: 12 }}>

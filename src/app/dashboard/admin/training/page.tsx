@@ -53,7 +53,7 @@ export default function TrainingListPage() {
         }
       />
 
-      <div className="p-8">
+      <div className="p-4 md:p-8">
         {!modules ? (
           <LoadingBlock />
         ) : modules.length === 0 ? (

@@ -1,6 +1,6 @@
 import crypto from "crypto";
 
-/** Generates a URL-safe unique token used to identify a campaign target in tracking links. */
+/** Generates a URL-safe unique token used to identify a simulation target in tracking links. */
 export function generateTrackingToken(): string {
   return crypto.randomBytes(16).toString("hex");
 }
@@ -37,22 +37,22 @@ export function initials(name: string): string {
 }
 
 /**
- * Computes a 0-100 "phish-prone" risk score for an employee based on their
- * simulated-campaign history. Higher = riskier. Weighs clicking/submitting
- * credentials heavily, rewards reporting suspicious emails.
+ * Computes a 0-100 awareness score for a student based on their
+ * simulation history. Higher = riskier (more likely to fall for phishing).
+ * Weighs clicking/submitting credentials heavily, rewards reporting.
  */
 export function computeRiskScore(stats: {
-  totalCampaigns: number;
+  totalSimulations: number;
   clicked: number;
   submitted: number;
   reported: number;
 }): number {
-  const { totalCampaigns, clicked, submitted, reported } = stats;
-  if (totalCampaigns === 0) return 0;
+  const { totalSimulations, clicked, submitted, reported } = stats;
+  if (totalSimulations === 0) return 0;
 
-  const clickRate = clicked / totalCampaigns;
-  const submitRate = submitted / totalCampaigns;
-  const reportRate = reported / totalCampaigns;
+  const clickRate = clicked / totalSimulations;
+  const submitRate = submitted / totalSimulations;
+  const reportRate = reported / totalSimulations;
 
   let score = clickRate * 60 + submitRate * 40 - reportRate * 30;
   score = Math.max(0, Math.min(100, score));
@@ -64,3 +64,32 @@ export function riskLabel(score: number): { label: string; tone: "low" | "medium
   if (score >= 30) return { label: "Medium risk", tone: "medium" };
   return { label: "Low risk", tone: "low" };
 }
+
+/**
+ * Computes a 0-1000 resilience score for a student. Higher = better / safer.
+ * Rewards training completion and reporting phishing, penalizes clicking and credential submission.
+ */
+export function computeResilienceScore(stats: {
+  completedCourses: number;
+  totalSimulations: number;
+  clicked: number;
+  submitted: number;
+  reported: number;
+}): number {
+  const { completedCourses, clicked, submitted, reported } = stats;
+  let score = 100; // Base starting points
+  score += completedCourses * 200;
+  score += reported * 100;
+  score -= clicked * 150;
+  score -= submitted * 250;
+
+  return Math.max(0, Math.min(1000, Math.round(score)));
+}
+
+export function resilienceLabel(score: number): { label: string; tone: "low" | "medium" | "high" | "success" } {
+  if (score >= 850) return { label: "Guardian", tone: "success" };
+  if (score >= 600) return { label: "Defender", tone: "low" };
+  if (score >= 300) return { label: "Aware", tone: "medium" };
+  return { label: "Novice", tone: "high" };
+}
+

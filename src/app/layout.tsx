@@ -23,7 +23,7 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "SecureGuard | Awareness & Phishing Simulation Portal",
   description:
-    "Run phishing simulation campaigns, deliver security awareness training, and track organizational risk in one portal.",
+    "Run phishing simulations, deliver security awareness training, and track risk in one educational portal.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

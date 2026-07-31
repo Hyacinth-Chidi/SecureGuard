@@ -5,7 +5,7 @@ export default function NewTrainingPage() {
   return (
     <div>
       <PageHeader title="New training module" description="Write a lesson and an optional quiz to check understanding." />
-      <div className="p-8">
+      <div className="p-4 md:p-8">
         <TrainingForm />
       </div>
     </div>

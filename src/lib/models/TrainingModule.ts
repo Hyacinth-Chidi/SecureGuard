@@ -8,8 +8,6 @@ export interface IQuizQuestion {
 
 export interface ITrainingModule {
   _id: mongoose.Types.ObjectId;
-  organizationId?: mongoose.Types.ObjectId;
-  isSystem: boolean;
   title: string;
   summary: string;
   content: string;
@@ -17,6 +15,8 @@ export interface ITrainingModule {
   estimatedMinutes: number;
   quiz: IQuizQuestion[];
   published: boolean;
+  simulationTemplateId?: mongoose.Types.ObjectId;
+  prerequisiteModuleId?: mongoose.Types.ObjectId;
   createdBy?: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
@@ -33,8 +33,6 @@ const QuizQuestionSchema = new Schema<IQuizQuestion>(
 
 const TrainingModuleSchema = new Schema<ITrainingModule>(
   {
-    organizationId: { type: Schema.Types.ObjectId, ref: "Organization", index: true },
-    isSystem: { type: Boolean, default: false, index: true },
     title: { type: String, required: true, trim: true },
     summary: { type: String, default: "" },
     content: { type: String, required: true },
@@ -42,6 +40,8 @@ const TrainingModuleSchema = new Schema<ITrainingModule>(
     estimatedMinutes: { type: Number, default: 5 },
     quiz: { type: [QuizQuestionSchema], default: [] },
     published: { type: Boolean, default: true },
+    simulationTemplateId: { type: Schema.Types.ObjectId, ref: "Template" },
+    prerequisiteModuleId: { type: Schema.Types.ObjectId, ref: "TrainingModule" },
     createdBy: { type: Schema.Types.ObjectId, ref: "User" },
   },
   { timestamps: true }

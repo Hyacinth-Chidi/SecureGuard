@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
-import CampaignTarget from "@/lib/models/CampaignTarget";
+import SimulationResult from "@/lib/models/SimulationResult";
 
 export async function GET(req: Request, { params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
@@ -8,8 +8,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ token: s
 
   try {
     await connectDB();
-    await CampaignTarget.updateOne({ token, openedAt: null }, { $set: { openedAt: new Date() } });
-    await CampaignTarget.updateOne({ token, clickedAt: null }, { $set: { clickedAt: new Date() } });
+    await SimulationResult.updateOne({ token, openedAt: null }, { $set: { openedAt: new Date() } });
+    await SimulationResult.updateOne({ token, clickedAt: null }, { $set: { clickedAt: new Date() } });
   } catch (err) {
     console.error("Click tracking error:", err);
   }

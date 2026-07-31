@@ -7,10 +7,10 @@ interface RenderArgs {
 
 /**
  * Templates support {{first_name}} and {{tracking_link}} placeholders.
- * A tracking pixel is appended automatically so campaign "open" rates can be
+ * A tracking pixel is appended automatically so simulation "open" rates can be
  * measured even for templates that don't reference it explicitly.
  */
-export function renderCampaignEmail({ html, firstName, trackingClickUrl, trackingPixelUrl }: RenderArgs): string {
+export function renderSimulationEmail({ html, firstName, trackingClickUrl, trackingPixelUrl }: RenderArgs): string {
   let rendered = html
     .replaceAll("{{first_name}}", firstName)
     .replaceAll("{{tracking_link}}", trackingClickUrl);

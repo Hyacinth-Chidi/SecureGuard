@@ -1,5 +1,5 @@
 import { connectDB } from "@/lib/db";
-import CampaignTarget from "@/lib/models/CampaignTarget";
+import SimulationResult from "@/lib/models/SimulationResult";
 
 const PIXEL = Buffer.from(
   "R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBTAA7",
@@ -11,7 +11,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ token: 
 
   try {
     await connectDB();
-    await CampaignTarget.updateOne({ token, openedAt: null }, { $set: { openedAt: new Date() } });
+    await SimulationResult.updateOne({ token, openedAt: null }, { $set: { openedAt: new Date() } });
   } catch (err) {
     console.error("Tracking pixel error:", err);
   }

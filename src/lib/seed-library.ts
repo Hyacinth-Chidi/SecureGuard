@@ -327,6 +327,63 @@ async function main() {
           correctIndex: 1,
         },
       ],
+    },
+    {
+      title: "[System] Password Security Essentials",
+      summary: "Best practices for creating strong passwords and using multi-factor authentication.",
+      category: "Passwords",
+      estimatedMinutes: 5,
+      content: `Passwords are the keys to your digital life. Attackers use automated tools to guess weak passwords or reuse passwords exposed in other breaches.\n\nBest Practices:\n- Use a password manager to generate and store long, unique passwords for every site.\n- Never reuse your work password on personal accounts.\n- Enable Multi-Factor Authentication (MFA) everywhere possible. It stops 99% of automated attacks.\n- Passphrases (like combining random words) are easier to remember and harder to crack than short complex passwords.\n- Don't share passwords via email, chat, or sticky notes.`,
+      quiz: [
+        {
+          question: "What is the most effective way to prevent unauthorized access even if your password is stolen?",
+          options: [
+            "Changing your password every 30 days",
+            "Using a mix of uppercase and lowercase letters",
+            "Enabling Multi-Factor Authentication (MFA)",
+            "Not telling anyone your password",
+          ],
+          correctIndex: 2,
+        }
+      ],
+    },
+    {
+      title: "[System] Social Engineering & BEC",
+      summary: "How attackers manipulate humans instead of hacking systems.",
+      category: "Advanced Threats",
+      estimatedMinutes: 7,
+      content: `Social engineering is the art of manipulating people so they give up confidential information. Business Email Compromise (BEC) is a form of social engineering where an attacker compromises or impersonates a corporate email account to conduct fraud.\n\nKey Tactics:\n- Authority: Pretending to be the CEO or a high-ranking executive demanding an urgent wire transfer.\n- Scarcity: "This invoice is past due and services will be cut off today."\n- Familiarity: Researching your LinkedIn to reference your recent projects or coworkers.\n\nDefense:\nAlways verify unusual requests for money, sensitive data, or password changes out of band. If the "CEO" emails you for a gift card, call or text their known phone number to verify, even if the email looks perfectly legitimate.`,
+      quiz: [
+        {
+          question: "If you receive an urgent email from your CEO asking for a wire transfer to a new vendor, what should you do?",
+          options: [
+            "Process it immediately to avoid making the CEO wait",
+            "Reply to the email to confirm the details",
+            "Verify the request through a secondary channel, like a phone call or Slack message",
+            "Forward it to the IT helpdesk",
+          ],
+          correctIndex: 2,
+        }
+      ],
+    },
+    {
+      title: "[System] Safe Web Browsing",
+      summary: "Keep your devices safe while browsing the internet and downloading files.",
+      category: "General Security",
+      estimatedMinutes: 4,
+      content: `Your web browser is the main gateway between your device and the internet. Malicious websites can trick you into downloading malware or giving away credentials.\n\nGuidelines:\n- Look for the padlock (HTTPS) on login pages, but remember: scammers can use HTTPS too. It just means the connection is encrypted.\n- Avoid downloading cracked software, free media players, or suspicious browser extensions.\n- Keep your browser and OS updated to the latest version. Updates patch known security vulnerabilities.\n- Do not ignore browser warnings like "This site ahead contains malware."\n- On public Wi-Fi (like a coffee shop), use a VPN to encrypt your traffic.`,
+      quiz: [
+        {
+          question: "If a website has a padlock (HTTPS) in the address bar, what does that guarantee?",
+          options: [
+            "The website is completely safe and not a scam",
+            "The connection between your browser and the site is encrypted",
+            "The website is owned by a legitimate registered business",
+            "The website cannot download malware to your computer",
+          ],
+          correctIndex: 1,
+        }
+      ],
     }
   ];
 

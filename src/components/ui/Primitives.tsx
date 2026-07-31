@@ -56,14 +56,14 @@ export function StatCard({
   }[tone];
 
   return (
-    <Card className="p-6 transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-black/40">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-sm font-medium uppercase tracking-wider text-text-muted">{label}</p>
-          <p className="font-display text-4xl font-bold text-text-main mt-2">{value}</p>
-          {sublabel && <p className="text-sm text-text-muted mt-2">{sublabel}</p>}
+    <Card className="p-4 md:p-6 transition-all hover:-translate-y-1 hover:shadow-xl hover:shadow-black/40">
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <p className="text-[10px] md:text-sm font-medium uppercase tracking-wider text-text-muted leading-tight">{label}</p>
+          <p className="font-display text-2xl md:text-4xl font-bold text-text-main mt-1 md:mt-2">{value}</p>
+          {sublabel && <p className="text-xs md:text-sm text-text-muted mt-1 md:mt-2 leading-snug">{sublabel}</p>}
         </div>
-        {icon && <div className={cn("p-3 rounded-xl shadow-inner", toneColor)}>{icon}</div>}
+        {icon && <div className={cn("p-2 md:p-3 rounded-lg md:rounded-xl shadow-inner shrink-0", toneColor)}>{icon}</div>}
       </div>
     </Card>
   );

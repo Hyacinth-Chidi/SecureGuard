@@ -13,13 +13,13 @@ function smtpConfigured() {
 }
 
 /**
- * Sends a simulated-phishing email. If SMTP_* env vars are configured, a real
- * email is delivered via nodemailer. Otherwise the send is "simulated": the
- * message is logged to the server console and the caller still records the
- * target as sent, so the rest of the product (tracking, reporting) works
- * without requiring an email provider to be wired up first.
+ * Sends a simulated phishing email for a post-course simulation test.
+ * If SMTP_* env vars are configured, a real email is delivered via nodemailer.
+ * Otherwise the send is "simulated": the message is logged to the server
+ * console so the rest of the product (tracking, reporting) works without
+ * requiring an email provider.
  */
-export async function sendCampaignEmail(args: SendArgs): Promise<{ simulated: boolean }> {
+export async function sendSimulationEmail(args: SendArgs): Promise<{ simulated: boolean }> {
   if (!smtpConfigured()) {
     console.log(
       `[SecureGuard][simulated-send] To: ${args.to} | From: "${args.fromName}" <${args.fromEmail}> | Subject: ${args.subject}`

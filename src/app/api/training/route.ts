@@ -5,7 +5,6 @@ import TrainingModule from "@/lib/models/TrainingModule";
 import TrainingProgress from "@/lib/models/TrainingProgress";
 import User from "@/lib/models/User";
 import { requireAdmin, requireUser } from "@/lib/apiAuth";
-import { buildTenantScopedQuery } from "@/lib/organizationScope";
 
 const quizQuestionSchema = z.object({
   question: z.string().min(1),
@@ -28,29 +27,21 @@ export async function GET() {
   if (error) return error;
 
   await connectDB();
-  const organizationId = session!.user.organizationId;
-  const adminIds = await User.find({ organizationId, role: "org_admin" }, "_id");
+  const adminIds = await User.find({ role: "admin" }, "_id");
 
-  if (session!.user.role === "org_admin") {
-    const modules = await TrainingModule.find(
-      buildTenantScopedQuery({}, organizationId, { createdBy: { $in: adminIds.map((admin) => admin._id) } })
-    )
+  if (session!.user.role === "admin") {
+    const modules = await TrainingModule.find({ createdBy: { $in: adminIds.map((admin) => admin._id) } })
       .sort({ createdAt: -1 })
       .lean();
-    const totalEmployees = await User.countDocuments({
-      role: "employee",
+    const totalStudents = await User.countDocuments({
+      role: "student",
       active: true,
-      organizationId,
     });
     const moduleIds = modules.map((module_) => module_._id);
 
     const progressAgg = await TrainingProgress.aggregate([
       {
-        $match: buildTenantScopedQuery(
-          { status: "completed" },
-          organizationId,
-          { status: "completed", moduleId: { $in: moduleIds } }
-        ),
+        $match: { status: "completed", moduleId: { $in: moduleIds } },
       },
       { $group: { _id: "$moduleId", completions: { $sum: 1 }, avgScore: { $avg: "$score" } } },
     ]);
@@ -60,18 +51,14 @@ export async function GET() {
       ...m,
       completions: progressMap.get(m._id.toString())?.completions ?? 0,
       avgScore: Math.round(progressMap.get(m._id.toString())?.avgScore ?? 0),
-      totalEmployees,
+      totalEmployees: totalStudents,
     }));
 
     return NextResponse.json({ modules: enriched });
   }
 
   const modules = await TrainingModule.find({
-    ...buildTenantScopedQuery(
-      { published: true },
-      organizationId,
-      { published: true, createdBy: { $in: adminIds.map((admin) => admin._id) } }
-    ),
+    published: true, createdBy: { $in: adminIds.map((admin) => admin._id) }
   })
     .sort({ createdAt: -1 })
     .lean();
@@ -100,7 +87,6 @@ export async function POST(req: Request) {
   await connectDB();
   const module_ = await TrainingModule.create({
     ...parsed.data,
-    organizationId: session!.user.organizationId,
     createdBy: session!.user.id,
   });
   return NextResponse.json({ module: module_ }, { status: 201 });

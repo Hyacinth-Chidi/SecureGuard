@@ -7,7 +7,7 @@ import { ShieldAlert, ShieldCheck, CheckCircle2, ArrowRight, Users2 } from "luci
 interface Context {
   alreadySubmitted: boolean;
   alreadyReported: boolean;
-  campaignName: string;
+  simulationName: string;
   template: {
     fromName: string;
     subject: string;
@@ -316,7 +316,7 @@ export default function PhishLandingPage({ params }: { params: Promise<{ token: 
             {reported ? "Reported — thank you" : "Report this as phishing"}
           </button>
           <Link
-            href="/dashboard/employee/training"
+            href="/dashboard/student/training"
             className="flex-1 bg-primary text-white rounded-xl px-4 py-3.5 text-sm font-semibold hover:bg-primary-glow shadow-[0_0_15px_rgba(0,255,170,0.2)] transition-all flex items-center justify-center gap-2"
           >
             Review awareness training
@@ -325,7 +325,7 @@ export default function PhishLandingPage({ params }: { params: Promise<{ token: 
         </div>
 
         <p className="text-xs text-text-muted text-center mt-8">
-          This was a simulated phishing exercise run by your organization&apos;s security team as part of the <span className="text-white font-medium">{ctx.campaignName}</span> campaign.
+          This was a simulated phishing exercise as part of your <span className="text-white font-medium">{ctx.simulationName}</span> course.
           No real data was collected.
         </p>
       </div>

@@ -18,7 +18,7 @@ export default function EditTemplatePage({ params }: { params: Promise<{ id: str
   return (
     <div>
       <PageHeader title="Edit template" description="Update this phishing email template." />
-      <div className="p-8">{template ? <TemplateForm initial={template} templateId={id} /> : <LoadingBlock />}</div>
+      <div className="p-4 md:p-8">{template ? <TemplateForm initial={template} templateId={id} /> : <LoadingBlock />}</div>
     </div>
   );
 }

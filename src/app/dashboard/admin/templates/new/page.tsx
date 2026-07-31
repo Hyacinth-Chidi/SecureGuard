@@ -5,7 +5,7 @@ export default function NewTemplatePage() {
   return (
     <div>
       <PageHeader title="New template" description="Build a phishing email and its teachable-moment landing page." />
-      <div className="p-8">
+      <div className="p-4 md:p-8">
         <TemplateForm />
       </div>
     </div>

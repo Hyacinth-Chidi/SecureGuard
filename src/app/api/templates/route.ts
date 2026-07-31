@@ -4,7 +4,6 @@ import { connectDB } from "@/lib/db";
 import Template from "@/lib/models/Template";
 import { requireAdmin } from "@/lib/apiAuth";
 import User from "@/lib/models/User";
-import { buildTenantScopedQuery } from "@/lib/organizationScope";
 
 const templateSchema = z.object({
   name: z.string().min(2),
@@ -20,15 +19,12 @@ const templateSchema = z.object({
 });
 
 export async function GET() {
-  const { error, session } = await requireAdmin();
+  const { error } = await requireAdmin();
   if (error) return error;
 
   await connectDB();
-  const organizationId = session!.user.organizationId;
-  const adminIds = await User.find({ organizationId, role: "org_admin" }, "_id");
-  const templates = await Template.find(
-    buildTenantScopedQuery({}, organizationId, { createdBy: { $in: adminIds.map((admin) => admin._id) } })
-  )
+  const adminIds = await User.find({ role: "admin" }, "_id");
+  const templates = await Template.find({ createdBy: { $in: adminIds.map((admin) => admin._id) } })
     .sort({ createdAt: -1 })
     .lean();
   return NextResponse.json({ templates });
@@ -47,7 +43,6 @@ export async function POST(req: Request) {
   await connectDB();
   const template = await Template.create({
     ...parsed.data,
-    organizationId: session!.user.organizationId,
     createdBy: session!.user.id,
   });
   return NextResponse.json({ template }, { status: 201 });

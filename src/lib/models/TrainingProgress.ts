@@ -4,7 +4,6 @@ export type TrainingStatus = "not_started" | "in_progress" | "completed";
 
 export interface ITrainingProgress {
   _id: mongoose.Types.ObjectId;
-  organizationId?: mongoose.Types.ObjectId;
   userId: mongoose.Types.ObjectId;
   moduleId: mongoose.Types.ObjectId;
   status: TrainingStatus;
@@ -17,7 +16,6 @@ export interface ITrainingProgress {
 
 const TrainingProgressSchema = new Schema<ITrainingProgress>(
   {
-    organizationId: { type: Schema.Types.ObjectId, ref: "Organization", index: true },
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
     moduleId: { type: Schema.Types.ObjectId, ref: "TrainingModule", required: true },
     status: { type: String, enum: ["not_started", "in_progress", "completed"], default: "not_started" },

@@ -51,7 +51,7 @@ export default function TemplatesPage() {
         }
       />
 
-      <div className="p-8">
+      <div className="p-4 md:p-8">
         {!templates ? (
           <LoadingBlock />
         ) : templates.length === 0 ? (

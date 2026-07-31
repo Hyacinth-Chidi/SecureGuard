@@ -1,6 +1,5 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
-import { getPostLoginRedirect } from "@/lib/tenant";
 
 export default async function DashboardIndex() {
   const session = await auth();
@@ -8,5 +7,6 @@ export default async function DashboardIndex() {
     redirect("/login");
   }
 
-  redirect(getPostLoginRedirect(session.user.role, session.user.organizationSlug));
+  const redirectPath = session.user.role === "admin" ? "/dashboard/admin" : "/dashboard/student";
+  redirect(redirectPath);
 }
