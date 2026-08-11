@@ -103,7 +103,7 @@ export default function StudentOverviewPage() {
                 <div className="flex items-center gap-3 shrink-0">
                   {n.link && (
                     <Link
-                      href={n.link}
+                      href={n.link?.startsWith('/courses/') ? n.link.replace('/courses/', '/dashboard/student/training/') : n.link}
                       onClick={() => markNotificationRead(n._id)}
                       className="text-xs font-bold bg-primary text-white px-3 py-1.5 rounded-lg hover:bg-primary-glow transition-colors"
                     >

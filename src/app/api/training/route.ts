@@ -20,6 +20,8 @@ const moduleSchema = z.object({
   estimatedMinutes: z.number().int().min(1),
   quiz: z.array(quizQuestionSchema).default([]),
   published: z.boolean().default(true),
+  videoUrl: z.string().optional().or(z.literal("")),
+  featuredImage: z.string().optional().or(z.literal("")),
 });
 
 export async function GET() {

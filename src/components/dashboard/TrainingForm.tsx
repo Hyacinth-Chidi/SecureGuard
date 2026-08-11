@@ -1,10 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Image as ImageIcon } from "lucide-react";
+import dynamic from "next/dynamic";
 import { Card } from "@/components/ui/Primitives";
 import { Button } from "@/components/ui/Button";
+import "@uiw/react-md-editor/markdown-editor.css";
+import "@uiw/react-markdown-preview/markdown.css";
+
+const MDEditor = dynamic(() => import("@uiw/react-md-editor"), { ssr: false });
 
 interface QuizQuestion {
   question: string;
@@ -20,6 +25,8 @@ export interface TrainingFormValues {
   estimatedMinutes: number;
   quiz: QuizQuestion[];
   published: boolean;
+  videoUrl?: string;
+  featuredImage?: string;
 }
 
 const defaultValues: TrainingFormValues = {
@@ -30,13 +37,59 @@ const defaultValues: TrainingFormValues = {
   estimatedMinutes: 5,
   quiz: [],
   published: true,
+  videoUrl: "",
+  featuredImage: "",
 };
+
+const CATEGORIES = [
+  "General",
+  "Phishing Awareness",
+  "Password Security",
+  "Social Engineering",
+  "Email Security",
+  "Data Protection",
+  "Network Security",
+  "Malware & Ransomware",
+  "Mobile Security",
+  "Incident Response",
+];
 
 export function TrainingForm({ initial, moduleId }: { initial?: Partial<TrainingFormValues>; moduleId?: string }) {
   const router = useRouter();
   const [values, setValues] = useState<TrainingFormValues>({ ...defaultValues, ...initial });
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  // Store the selected file locally — only upload to Cloudinary on submit
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string>(initial?.featuredImage || "");
+
+  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setSelectedFile(file);
+    // Show a local preview immediately
+    setPreviewUrl(URL.createObjectURL(file));
+  }
+
+  async function uploadToCloudinary(file: File): Promise<string | null> {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("upload_preset", process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "secureguard_uploads");
+
+    const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+    const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
+      method: "POST",
+      body: formData,
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      return data.secure_url;
+    }
+    const errData = await res.json().catch(() => ({}));
+    throw new Error(errData?.error?.message || "Image upload failed.");
+  }
 
   function update<K extends keyof TrainingFormValues>(key: K, value: TrainingFormValues[K]) {
     setValues((v) => ({ ...v, [key]: value }));
@@ -75,17 +128,33 @@ export function TrainingForm({ initial, moduleId }: { initial?: Partial<Training
     setError(null);
     setPending(true);
 
+    let submitValues = { ...values };
+
+    // Upload image to Cloudinary if a new file was selected
+    if (selectedFile) {
+      try {
+        const imageUrl = await uploadToCloudinary(selectedFile);
+        if (imageUrl) {
+          submitValues.featuredImage = imageUrl;
+        }
+      } catch (err: any) {
+        setPending(false);
+        setError(err.message || "Image upload failed.");
+        return;
+      }
+    }
+
     const res = moduleId
       ? await fetch(`/api/training/${moduleId}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(values),
-        })
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(submitValues),
+      })
       : await fetch("/api/training", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(values),
-        });
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(submitValues),
+      });
 
     setPending(false);
     if (!res.ok) {
@@ -118,14 +187,60 @@ export function TrainingForm({ initial, moduleId }: { initial?: Partial<Training
             className="mt-2 w-full rounded-xl bg-surface/50 border border-border px-4 py-3 text-sm text-text-main placeholder:text-text-muted/50 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
           />
         </div>
+        <div className="sm:col-span-2">
+          <label className="text-sm font-semibold text-white">YouTube Video URL (optional)</label>
+          <input
+            value={values.videoUrl}
+            onChange={(e) => update("videoUrl", e.target.value)}
+            placeholder="e.g., https://www.youtube.com/watch?v=..."
+            className="mt-2 w-full rounded-xl bg-surface/50 border border-border px-4 py-3 text-sm text-text-main placeholder:text-text-muted/50 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+          />
+        </div>
+        <div className="sm:col-span-2">
+          <label className="text-sm font-semibold text-white mb-2 block">Featured Image (optional)</label>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleFileSelect}
+            className="hidden"
+          />
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="w-full rounded-xl bg-surface/50 border border-border border-dashed p-6 flex flex-col items-center justify-center cursor-pointer hover:bg-surface transition-colors"
+          >
+            {previewUrl ? (
+              <div className="flex flex-col items-center gap-2">
+                <div className="relative w-full max-w-sm rounded-lg overflow-hidden aspect-video">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={previewUrl} alt="Featured" className="w-full h-full object-cover" />
+                </div>
+                <span className="text-xs text-text-muted">Click to change image</span>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center gap-2 text-text-muted">
+                <ImageIcon size={24} />
+                <span className="text-sm font-medium">Click to select an image</span>
+              </div>
+            )}
+          </button>
+        </div>
         <div>
           <label className="text-sm font-semibold text-white">Category</label>
           <input
             required
+            list="category-options"
             value={values.category}
             onChange={(e) => update("category", e.target.value)}
+            placeholder="Select or type a category"
             className="mt-2 w-full rounded-xl bg-surface/50 border border-border px-4 py-3 text-sm text-text-main placeholder:text-text-muted/50 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
           />
+          <datalist id="category-options">
+            {CATEGORIES.map((cat) => (
+              <option key={cat} value={cat} />
+            ))}
+          </datalist>
         </div>
         <div>
           <label className="text-sm font-semibold text-white">Estimated minutes</label>
@@ -150,15 +265,16 @@ export function TrainingForm({ initial, moduleId }: { initial?: Partial<Training
       </Card>
 
       <Card className="p-6">
-        <label className="text-sm font-semibold text-white">Lesson content</label>
-        <p className="text-xs text-text-muted mt-1 mb-2">Plain text or simple paragraphs, shown to employees as the lesson.</p>
-        <textarea
-          required
-          rows={10}
-          value={values.content}
-          onChange={(e) => update("content", e.target.value)}
-          className="w-full rounded-xl bg-surface/50 border border-border px-4 py-3 text-sm text-text-main placeholder:text-text-muted/50 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
-        />
+        <label className="text-sm font-semibold text-white">Lesson content (Markdown)</label>
+        <p className="text-xs text-text-muted mt-1 mb-2">Write your lesson content here. Use markdown for headings, bold, lists, etc.</p>
+        <div data-color-mode="dark">
+          <MDEditor
+            value={values.content}
+            onChange={(val) => update("content", val || "")}
+            height={400}
+            className="w-full rounded-xl border border-border !bg-surface/50"
+          />
+        </div>
       </Card>
 
       <Card className="p-6">
@@ -227,7 +343,7 @@ export function TrainingForm({ initial, moduleId }: { initial?: Partial<Training
 
       <div className="flex gap-3">
         <Button type="submit" disabled={pending}>
-          {pending ? "Saving…" : moduleId ? "Save changes" : "Create module"}
+          {pending ? (selectedFile ? "saving…" : "Saving…") : moduleId ? "Save changes" : "Create module"}
         </Button>
       </div>
     </form>

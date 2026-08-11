@@ -15,6 +15,8 @@ export interface ITrainingModule {
   estimatedMinutes: number;
   quiz: IQuizQuestion[];
   published: boolean;
+  videoUrl?: string;
+  featuredImage?: string;
   simulationTemplateId?: mongoose.Types.ObjectId;
   prerequisiteModuleId?: mongoose.Types.ObjectId;
   createdBy?: mongoose.Types.ObjectId;
@@ -40,6 +42,8 @@ const TrainingModuleSchema = new Schema<ITrainingModule>(
     estimatedMinutes: { type: Number, default: 5 },
     quiz: { type: [QuizQuestionSchema], default: [] },
     published: { type: Boolean, default: true },
+    videoUrl: { type: String, default: "" },
+    featuredImage: { type: String, default: "" },
     simulationTemplateId: { type: Schema.Types.ObjectId, ref: "Template" },
     prerequisiteModuleId: { type: Schema.Types.ObjectId, ref: "TrainingModule" },
     createdBy: { type: Schema.Types.ObjectId, ref: "User" },

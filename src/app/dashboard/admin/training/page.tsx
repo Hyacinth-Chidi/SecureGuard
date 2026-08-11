@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Plus, Trash2, Clock, Users2 } from "lucide-react";
+import { Plus, Trash2, Pencil, Clock, Users2 } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { Card, Badge } from "@/components/ui/Primitives";
 import { LoadingBlock, EmptyState } from "@/components/dashboard/States";
@@ -70,13 +70,24 @@ export default function TrainingListPage() {
                     {m.isSystem && <Badge tone="info">System</Badge>}
                   </div>
                   {!m.isSystem && (
-                    <button
-                      onClick={() => handleDelete(m._id)}
-                      className="text-text-muted hover:text-danger transition-colors"
-                      aria-label="Delete module"
-                    >
-                      <Trash2 size={15} />
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <Link
+                        href={`/dashboard/admin/training/${m._id}`}
+                        className="p-1.5 rounded-md text-text-muted hover:text-primary hover:bg-primary/10 transition-all flex items-center justify-center"
+                        aria-label="Edit module"
+                        title="Edit"
+                      >
+                        <Pencil size={15} />
+                      </Link>
+                      <button
+                        onClick={() => handleDelete(m._id)}
+                        className="p-1.5 rounded-md text-text-muted hover:text-danger hover:bg-danger/10 transition-all flex items-center justify-center"
+                        aria-label="Delete module"
+                        title="Delete"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
                   )}
                 </div>
                 <Link href={`/dashboard/admin/training/${m._id}`} className="mt-3 group">
