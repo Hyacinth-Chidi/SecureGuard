@@ -42,15 +42,14 @@ export default async function LoginPage({
             Awareness &amp; phishing simulation
           </div>
           <h1 className="font-display text-5xl font-extrabold leading-tight tracking-tight">
-            Train your people to recognize the hook before they bite.
+            Learn to recognize the hook before you bite.
           </h1>
           <p className="text-text-muted mt-6 text-lg leading-relaxed font-light">
-            Launch realistic phishing simulations, deliver bite-sized security training, and track
-            risk from one secure portal.
+            Master digital security skills through realistic phishing simulations, bite-sized training modules, and interactive quizzes.
           </p>
         </div>
 
-        <p className="relative text-sm font-medium text-text-muted/50 z-10">© {new Date().getFullYear()} SecureGuard. Internal use only.</p>
+        <p className="relative text-sm font-medium text-text-muted/50 z-10">© {new Date().getFullYear()} SecureGuard. All rights reserved.</p>
       </div>
 
       <div className="flex items-center justify-center p-4 md:p-8 relative overflow-hidden">

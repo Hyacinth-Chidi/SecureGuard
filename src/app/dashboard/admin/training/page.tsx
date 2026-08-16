@@ -41,7 +41,7 @@ export default function TrainingListPage() {
     <div>
       <PageHeader
         title="Training"
-        description="Security awareness modules assigned to employees."
+        description="Security awareness modules available to students."
         action={
           <Link
             href="/dashboard/admin/training/new"

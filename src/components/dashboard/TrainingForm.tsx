@@ -260,7 +260,7 @@ export function TrainingForm({ initial, moduleId }: { initial?: Partial<Training
             onChange={(e) => update("published", e.target.checked)}
             className="rounded border-line"
           />
-          Published (visible to employees)
+          Published (visible to students)
         </label>
       </Card>
 
