@@ -221,7 +221,7 @@ export function TrainingForm({ initial, moduleId }: { initial?: Partial<Training
             ) : (
               <div className="flex flex-col items-center gap-2 text-text-muted">
                 <ImageIcon size={24} />
-                <span className="text-sm font-medium">Click to select an image</span>
+                <span className="text-sm font-medium">Click to select an image.</span>
               </div>
             )}
           </button>
