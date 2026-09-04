@@ -3,6 +3,7 @@ import { z } from "zod";
 import { connectDB } from "@/lib/db";
 import TrainingModule from "@/lib/models/TrainingModule";
 import TrainingProgress from "@/lib/models/TrainingProgress";
+import Template from "@/lib/models/Template";
 import { requireAdmin, requireUser } from "@/lib/apiAuth";
 import User from "@/lib/models/User";
 
@@ -22,6 +23,7 @@ const moduleSchema = z.object({
   published: z.boolean().default(true),
   videoUrl: z.string().optional().or(z.literal("")),
   featuredImage: z.string().optional().or(z.literal("")),
+  simulationTemplateId: z.string().optional().nullable().transform((v) => (v && v.trim() !== "" ? v : null)),
 });
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -35,12 +37,24 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   const module_ = await TrainingModule.findOne({ _id: id, createdBy: { $in: adminIds.map((admin) => admin._id) } }).lean();
   if (!module_) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
+  let simulationTemplate = null;
+  if (module_.simulationTemplateId) {
+    simulationTemplate = await Template.findById(module_.simulationTemplateId)
+      .select("name fromName fromEmail subject htmlBody landingType landingHeadline landingBody redFlags")
+      .lean();
+  }
+
+  const enrichedModule = {
+    ...module_,
+    simulationTemplate,
+  };
+
   if (session!.user.role === "admin") {
-    return NextResponse.json({ module: module_ });
+    return NextResponse.json({ module: enrichedModule });
   }
 
   if (session!.user.role !== "student") {
-    return NextResponse.json({ module: module_ });
+    return NextResponse.json({ module: enrichedModule });
   }
 
   if (!module_.published) {
@@ -77,7 +91,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   }
 
   return NextResponse.json({
-    module: module_,
+    module: enrichedModule,
     progress,
     user: { name: session!.user.name, email: session!.user.email },
   });

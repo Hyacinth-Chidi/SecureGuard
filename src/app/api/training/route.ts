@@ -22,6 +22,7 @@ const moduleSchema = z.object({
   published: z.boolean().default(true),
   videoUrl: z.string().optional().or(z.literal("")),
   featuredImage: z.string().optional().or(z.literal("")),
+  simulationTemplateId: z.string().optional().nullable().transform((v) => (v && v.trim() !== "" ? v : null)),
 });
 
 export async function GET() {

@@ -21,12 +21,37 @@ export default function NewSimulationPage() {
     targetDepartment: "All",
   });
 
-  const departments = ["All", "Engineering", "Sales", "HR", "IT", "Finance", "General"];
+  const [departments, setDepartments] = useState<string[]>([
+    "All",
+    "Engineering",
+    "Finance",
+    "HR",
+    "Marketing",
+    "Sales",
+    "Student",
+    "IT",
+    "General",
+  ]);
 
   useEffect(() => {
     fetch("/api/templates")
       .then((r) => r.json())
       .then((d) => setTemplates(d.templates));
+
+    fetch("/api/admin/students")
+      .then((r) => r.json())
+      .then((d) => {
+        if (Array.isArray(d.students)) {
+          const depts = new Set<string>(["All"]);
+          d.students.forEach((s: any) => {
+            if (s.department && s.department.trim()) {
+              depts.add(s.department.trim());
+            }
+          });
+          setDepartments(Array.from(depts));
+        }
+      })
+      .catch(() => {});
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {

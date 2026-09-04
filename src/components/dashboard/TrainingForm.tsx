@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Trash2, Image as ImageIcon } from "lucide-react";
 import dynamic from "next/dynamic";
@@ -27,6 +27,7 @@ export interface TrainingFormValues {
   published: boolean;
   videoUrl?: string;
   featuredImage?: string;
+  simulationTemplateId?: string;
 }
 
 const defaultValues: TrainingFormValues = {
@@ -39,6 +40,7 @@ const defaultValues: TrainingFormValues = {
   published: true,
   videoUrl: "",
   featuredImage: "",
+  simulationTemplateId: "",
 };
 
 const CATEGORIES = [
@@ -54,15 +56,30 @@ const CATEGORIES = [
   "Incident Response",
 ];
 
+interface TemplateOption {
+  _id: string;
+  name: string;
+  category: string;
+  difficulty: string;
+}
+
 export function TrainingForm({ initial, moduleId }: { initial?: Partial<TrainingFormValues>; moduleId?: string }) {
   const router = useRouter();
   const [values, setValues] = useState<TrainingFormValues>({ ...defaultValues, ...initial });
+  const [templates, setTemplates] = useState<TemplateOption[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   // Store the selected file locally — only upload to Cloudinary on submit
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>(initial?.featuredImage || "");
+
+  useEffect(() => {
+    fetch("/api/templates")
+      .then((r) => r.json())
+      .then((d) => setTemplates(d.templates || []))
+      .catch(() => {});
+  }, []);
 
   function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -253,6 +270,28 @@ export function TrainingForm({ initial, moduleId }: { initial?: Partial<Training
             className="mt-2 w-full rounded-xl bg-surface/50 border border-border px-4 py-3 text-sm text-text-main placeholder:text-text-muted/50 outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
           />
         </div>
+        <div className="sm:col-span-2">
+          <label className="text-sm font-semibold text-white flex items-center justify-between">
+            <span>Attached Phishing Simulation (Optional)</span>
+            <span className="text-xs font-normal text-text-muted">Interactive lab for students</span>
+          </label>
+          <select
+            value={values.simulationTemplateId || ""}
+            onChange={(e) => update("simulationTemplateId", e.target.value)}
+            className="mt-2 w-full rounded-xl bg-surface/50 border border-border px-4 py-3 text-sm text-text-main outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer"
+          >
+            <option value="" className="bg-surface text-text-muted">None (Article & Quiz only)</option>
+            {templates.map((t) => (
+              <option key={t._id} value={t._id} className="bg-surface text-white">
+                {t.name} ({t.category} - {t.difficulty})
+              </option>
+            ))}
+          </select>
+          <p className="text-xs text-text-muted mt-1.5">
+            Selecting a template attaches an interactive mock email simulation to this course so students practice threat inspection.
+          </p>
+        </div>
+
         <label className="flex items-center gap-2 sm:col-span-2 text-sm text-slate-dark">
           <input
             type="checkbox"

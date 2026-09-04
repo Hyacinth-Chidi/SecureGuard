@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import Image from "next/image";
 import {
   LayoutDashboard,
+  Target,
   FileText,
   GraduationCap,
   Users,
@@ -20,6 +21,7 @@ import { signOutAction } from "@/app/actions";
 
 const adminLinks = [
   { href: "/dashboard/admin", label: "Overview", icon: LayoutDashboard },
+  { href: "/dashboard/admin/simulations", label: "Simulations", icon: Target },
   { href: "/dashboard/admin/templates", label: "Templates", icon: FileText },
   { href: "/dashboard/admin/training", label: "Training", icon: GraduationCap },
   { href: "/dashboard/admin/students", label: "Students", icon: Users },

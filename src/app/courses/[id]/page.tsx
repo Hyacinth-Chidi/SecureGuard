@@ -1,5 +1,6 @@
 import { connectDB } from "@/lib/db";
 import TrainingModule from "@/lib/models/TrainingModule";
+import Template from "@/lib/models/Template";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -10,6 +11,7 @@ import { ChevronLeft, Clock, Calendar, Shield, Award } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { CourseQuiz } from "./CourseQuiz";
+import { InteractiveSimulationLab, SimulationTemplateData } from "@/components/dashboard/InteractiveSimulationLab";
 import { formatDate } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -29,6 +31,26 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
   if (!course) {
     notFound();
   }
+
+  let simulationTemplate: any = null;
+  if (course.simulationTemplateId) {
+    simulationTemplate = await Template.findById(course.simulationTemplateId)
+      .select("name fromName fromEmail subject htmlBody landingType landingHeadline landingBody redFlags")
+      .lean();
+  }
+
+  const safeTemplate: SimulationTemplateData | null = simulationTemplate ? {
+    _id: simulationTemplate._id.toString(),
+    name: simulationTemplate.name,
+    fromName: simulationTemplate.fromName,
+    fromEmail: simulationTemplate.fromEmail,
+    subject: simulationTemplate.subject,
+    htmlBody: simulationTemplate.htmlBody,
+    landingType: simulationTemplate.landingType,
+    landingHeadline: simulationTemplate.landingHeadline,
+    landingBody: simulationTemplate.landingBody,
+    redFlags: simulationTemplate.redFlags,
+  } : null;
 
   const session = await auth();
   const youtubeId = getYouTubeId(course.videoUrl);
@@ -109,6 +131,11 @@ export default async function CourseDetailPage({ params }: { params: Promise<{ i
             {course.content}
           </ReactMarkdown>
         </article>
+
+        {/* Hands-on Interactive Threat Simulation Lab */}
+        {safeTemplate && (
+          <InteractiveSimulationLab template={safeTemplate} />
+        )}
 
         {/* Quiz Section */}
         {course.quiz && course.quiz.length > 0 && (

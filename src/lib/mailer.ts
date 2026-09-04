@@ -37,12 +37,25 @@ export async function sendSimulationEmail(args: SendArgs): Promise<{ simulated: 
     },
   });
 
-  await transporter.sendMail({
-    to: args.to,
-    from: `"${args.fromName}" <${process.env.SMTP_FROM ?? args.fromEmail}>`,
-    subject: args.subject,
-    html: args.html,
-  });
+  // Sanitize the 'from' address:
+  // With Gmail SMTP, the actual sending email address must match SMTP_USER to avoid rejection,
+  // while args.fromName can still be custom (e.g. "HR Department", "Microsoft Security").
+  let senderEmail = process.env.SMTP_USER || args.fromEmail;
+  if (process.env.SMTP_FROM && !process.env.SMTP_HOST?.includes("gmail.com")) {
+    const extracted = process.env.SMTP_FROM.match(/<([^>]+)>/)?.[1] || process.env.SMTP_FROM.replace(/["']/g, "").trim();
+    if (extracted) senderEmail = extracted;
+  }
 
-  return { simulated: false };
+  try {
+    await transporter.sendMail({
+      to: args.to,
+      from: `"${args.fromName}" <${senderEmail}>`,
+      subject: args.subject,
+      html: args.html,
+    });
+    return { simulated: false };
+  } catch (error) {
+    console.error(`[SecureGuard][mailer-error] Failed to send email to ${args.to}:`, error);
+    return { simulated: false };
+  }
 }

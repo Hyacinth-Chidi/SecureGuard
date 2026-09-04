@@ -10,6 +10,7 @@ import { LoadingBlock } from "@/components/dashboard/States";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { CourseQuiz } from "@/app/courses/[id]/CourseQuiz";
+import { InteractiveSimulationLab, SimulationTemplateData } from "@/components/dashboard/InteractiveSimulationLab";
 import { formatDate } from "@/lib/utils";
 
 interface QuizQuestion {
@@ -28,6 +29,7 @@ interface ModuleData {
   createdAt: string;
   estimatedMinutes: number;
   quiz: QuizQuestion[];
+  simulationTemplate?: SimulationTemplateData;
   progress?: { status: string; score?: number };
 }
 
@@ -154,10 +156,24 @@ export default function StudentTrainingDetailPage({ params }: { params: Promise<
             </ReactMarkdown>
           </article>
 
+          {/* Hands-on Interactive Threat Simulation Lab (if template attached) */}
+          {data.simulationTemplate && (
+            <InteractiveSimulationLab
+              template={data.simulationTemplate}
+              onComplete={() => {
+                const quizSection = document.getElementById("course-quiz-section");
+                if (quizSection) {
+                  quizSection.scrollIntoView({ behavior: "smooth" });
+                }
+              }}
+            />
+          )}
+
           {/* Quiz Section OR Mark Complete */}
-          {data.quiz && data.quiz.length > 0 ? (
-            <CourseQuiz moduleId={data._id} quizData={data.quiz} backLink="/dashboard/student/training" />
-          ) : (
+          <div id="course-quiz-section">
+            {data.quiz && data.quiz.length > 0 ? (
+              <CourseQuiz moduleId={data._id} quizData={data.quiz} backLink="/dashboard/student/training" />
+            ) : (
             <div className="mt-16 pt-8 border-t border-border/50 text-center">
               {showResult ? (
                  <div className="space-y-4">
@@ -192,7 +208,8 @@ export default function StudentTrainingDetailPage({ params }: { params: Promise<
                 </>
               )}
             </div>
-          )}
+            )}
+          </div>
         </Card>
       </div>
     </div>

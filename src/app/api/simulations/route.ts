@@ -2,8 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/apiAuth";
 import Simulation from "@/lib/models/Simulation";
 import SimulationResult from "@/lib/models/SimulationResult";
+import Template from "@/lib/models/Template";
 import User from "@/lib/models/User";
 import { generateTrackingToken } from "@/lib/utils";
+import { sendSimulationEmail } from "@/lib/mailer";
 import mongoose from "mongoose";
 
 export async function GET() {
@@ -74,17 +76,23 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Name and Template ID are required." }, { status: 400 });
     }
 
-    // Determine target users
-    const query: any = { role: "student" };
+    // Determine target users (any student or employee, excluding admins)
+    const query: any = { role: { $in: ["student", "employee"] } };
     const departments = [];
     if (targetDepartment && targetDepartment !== "All") {
-      query.department = targetDepartment;
+      // Case-insensitive department match so "Finance" matches "finance", etc.
+      query.department = { $regex: new RegExp(`^${targetDepartment}$`, "i") };
       departments.push(targetDepartment);
     } else {
       departments.push("All");
     }
 
-    const targetUsers = await User.find(query).select("_id");
+    const template = await Template.findById(templateId);
+    if (!template) {
+      return NextResponse.json({ error: "Template not found." }, { status: 404 });
+    }
+
+    const targetUsers = await User.find(query).select("_id email name");
     if (targetUsers.length === 0) {
       return NextResponse.json({ error: "No users found for the selected department." }, { status: 400 });
     }
@@ -102,13 +110,31 @@ export async function POST(req: NextRequest) {
       sentAt: new Date(),
     });
 
-    // Create tracking results for each target
-    const resultsToInsert = targetUserIds.map((userId) => ({
-      simulationId: simulation._id,
-      userId,
-      token: generateTrackingToken(),
-      emailSentAt: new Date(),
-    }));
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+
+    // Create tracking results for each target and send simulation emails
+    const resultsToInsert = targetUsers.map((u) => {
+      const token = generateTrackingToken();
+      const trackingLink = `${appUrl}/phish/${token}`;
+      let htmlBody = (template.htmlBody || "")
+        .replace(/{{tracking_link}}/g, trackingLink)
+        .replace(/{{first_name}}/g, u.name ? u.name.split(" ")[0] : "Team Member");
+
+      sendSimulationEmail({
+        to: u.email,
+        fromName: template.fromName,
+        fromEmail: template.fromEmail,
+        subject: template.subject,
+        html: htmlBody,
+      }).catch((e) => console.error(`Failed to dispatch simulation email to ${u.email}:`, e));
+
+      return {
+        simulationId: simulation._id,
+        userId: u._id,
+        token,
+        emailSentAt: new Date(),
+      };
+    });
 
     await SimulationResult.insertMany(resultsToInsert);
 
